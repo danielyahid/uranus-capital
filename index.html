@@ -960,23 +960,26 @@ slides.forEach(s => slideObserver.observe(s));
     prev = close;
   }
 
-  /* ── SIGNALS ─────────────────────────────────────── */
+  /* ── FIXED Y-RANGE (all 120 candles, computed once) ── */
+  let globalLo = Infinity, globalHi = -Infinity;
+  candles.forEach(c => {
+    globalLo = Math.min(globalLo, c.low);
+    globalHi = Math.max(globalHi, c.high);
+  });
+  const rangePad = (globalHi - globalLo) * 0.14;
+  globalLo -= rangePad;
+  globalHi += rangePad;
+
+  /* ── SIGNALS (STRONG only) ───────────────────────── */
   const signals = [
     { index: 5,   type: 'STRONG_BUY',  label: 'Strong BUY'  },
     { index: 18,  type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 28,  type: 'BUY',         label: 'BUY'         },
-    { index: 35,  type: 'BUY',         label: 'BUY'         },
     { index: 48,  type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 52,  type: 'SELL',        label: 'SELL'        },
     { index: 58,  type: 'STRONG_BUY',  label: 'Strong BUY'  },
-    { index: 62,  type: 'BUY',         label: 'BUY'         },
     { index: 72,  type: 'STRONG_SELL', label: 'Strong SELL' },
     { index: 82,  type: 'STRONG_BUY',  label: 'Strong BUY'  },
-    { index: 88,  type: 'BUY',         label: 'BUY'         },
     { index: 95,  type: 'STRONG_SELL', label: 'Strong SELL' },
     { index: 100, type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 108, type: 'BUY',         label: 'BUY'         },
-    { index: 112, type: 'BUY',         label: 'BUY'         },
     { index: 118, type: 'STRONG_BUY',  label: 'Forecast BUY'},
   ];
 
@@ -1051,14 +1054,8 @@ slides.forEach(s => slideObserver.observe(s));
     cx.fillStyle = BG;
     cx.fillRect(0, 0, W, H);
 
-    // price range
-    let lo = Infinity, hi = -Infinity;
-    for (let i = 0; i < vis; i++) {
-      lo = Math.min(lo, candles[i].low);
-      hi = Math.max(hi, candles[i].high);
-    }
-    const pad = (hi - lo) * 0.14;
-    lo -= pad; hi += pad;
+    // fixed price range — computed once from all 120 candles so scale never changes
+    const lo = globalLo, hi = globalHi;
 
     const py = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
     const cx_ = i => PAD.left + (i + 0.5) * (cw / vis);
