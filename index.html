@@ -1,1124 +1,1158 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Uranus Capital — Bitcoin & Gold Investment Advisory</title>
-<meta name="description" content="4,546% returns since 2020. Professional Bitcoin & Gold investment advisory by Daniel Yahid."/>
+<title>Uranus Capital — ניהול הון בביטקוין וזהב</title>
+<meta name="description" content="4,546% תשואה מאז 2020. ייעוץ השקעות מקצועי בביטקוין וזהב על ידי דניאל יהיד."/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Frank+Ruhl+Libre:wght@300;400;700&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet"/>
+
 <style>
-/* ── TOKENS ───────────────────────────────────────────── */
+/* ── CSS VARIABLES ─────────────────────────────────────── */
 :root {
-  --bg:      #FAFAF8;
-  --white:   #FFFFFF;
-  --text:    #0D0D0D;
-  --text-2:  #6B6B6B;
-  --text-3:  #A8A8A8;
-  --gold:    #C9A84C;
-  --gold-l:  #E8C96A;
-  --gold-d:  #A08030;
-  --border:  #E8E5E0;
-  --card:    #FFFFFF;
-  --green:   #16A34A;
-  --red:     #DC2626;
-  --shadow:  0 2px 12px rgba(0,0,0,0.06);
-  --shadow-h:0 8px 32px rgba(0,0,0,0.10);
-  --r:       12px;
-  --serif:   'Playfair Display', Georgia, serif;
-  --sans:    'DM Sans', system-ui, sans-serif;
-  --section: 112px;
+  --bg: #F2F2F0;
+  --surface: #FFFFFF;
+  --surface-2: #ECEAE6;
+  --text: #1A1A1A;
+  --text-muted: #5A5A5A;
+  --gold: #C9A84C;
+  --border: rgba(0,0,0,0.08);
+  --shadow: 0 4px 40px rgba(0,0,0,0.08);
+  --transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+body.dark {
+  --bg: #0D0D0D;
+  --surface: #1A1A1A;
+  --surface-2: #141414;
+  --text: #F0EDE8;
+  --text-muted: #8A8680;
+  --border: rgba(255,255,255,0.08);
+  --shadow: 0 4px 40px rgba(0,0,0,0.4);
 }
 
 /* ── RESET ─────────────────────────────────────────────── */
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  font-family: 'Heebo', sans-serif;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--sans);
-  line-height: 1.65;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
+  transition: var(--transition);
+  overflow: hidden;
 }
-html[lang="he"] body { font-family: 'Frank Ruhl Libre', var(--sans); }
-::selection { background: var(--gold); color: #fff; }
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-img, canvas, svg { display: block; }
-a { color: inherit; text-decoration: none; }
-
-/* ── UTIL ──────────────────────────────────────────────── */
-.container { max-width: 1100px; margin: 0 auto; padding: 0 5%; }
-.section-tag {
-  display: inline-block;
-  font-size: .72rem; font-weight: 600;
-  letter-spacing: .2em; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 16px;
+body.lang-en {
+  font-family: 'Roboto', sans-serif;
+  direction: ltr;
 }
-.section-title {
-  font-family: var(--sans); font-size: clamp(1.7rem, 3.5vw, 2.4rem);
-  font-weight: 700; line-height: 1.2; color: var(--text);
-  margin-bottom: 16px;
-}
-.section-sub {
-  font-size: .95rem; color: var(--text-2); max-width: 480px;
-  line-height: 1.75; font-weight: 300;
-}
-
-/* ── REVEAL ────────────────────────────────────────────── */
-.reveal { opacity: 0; }
-
-/* ── SCROLL PROGRESS ───────────────────────────────────── */
-#progress {
-  position: fixed; top: 0; left: 0; height: 2px; width: 0;
-  background: var(--gold); z-index: 9999; pointer-events: none;
-  transition: width .08s linear;
+body.lang-he {
+  font-family: 'Heebo', sans-serif;
+  direction: rtl;
 }
 
 /* ── NAV ───────────────────────────────────────────────── */
-#nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-  height: 64px; background: rgba(250,250,248,.92);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid transparent;
-  transition: border-color .3s;
-  display: flex; align-items: center;
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(242,242,240,0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
 }
-#nav.scrolled { border-bottom-color: var(--border); }
-.nav-inner {
-  max-width: 1100px; margin: 0 auto; padding: 0 5%;
-  width: 100%; display: flex; align-items: center; gap: 40px;
+body.dark nav {
+  background: rgba(13,13,13,0.6);
 }
 .nav-logo {
-  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2.5px;
+  color: var(--gold);
+  text-decoration: none;
 }
-.nav-logo-mark {
-  width: 30px; height: 30px; flex-shrink: 0;
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.nav-logo-text {
-  font-size: .8rem; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--text);
-}
-.nav-links {
-  display: flex; gap: 28px; list-style: none; flex: 1; justify-content: center;
-}
-.nav-links a {
-  font-size: .82rem; font-weight: 500; color: var(--text-2);
-  letter-spacing: .04em; transition: color .2s;
-}
-.nav-links a:hover { color: var(--text); }
-.nav-end { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-.lang-btn {
-  font-family: var(--sans); font-size: .78rem; font-weight: 500;
-  background: none; border: 1px solid var(--border); color: var(--text-2);
-  padding: 5px 14px; border-radius: 6px; cursor: pointer;
-  transition: all .2s;
-}
-.lang-btn:hover { border-color: var(--gold); color: var(--gold); }
-.btn-nav {
-  font-family: var(--sans); font-size: .78rem; font-weight: 600;
-  background: var(--text); color: #fff; border: none;
-  padding: 9px 20px; border-radius: 8px; cursor: pointer;
-  text-decoration: none; display: inline-block; transition: all .2s;
-  letter-spacing: .02em;
-}
-.btn-nav:hover { background: #2a2a2a; }
 
-/* ── HERO ──────────────────────────────────────────────── */
-#hero {
-  padding: calc(64px + 80px) 5% 100px;
-  min-height: 92vh; display: flex; align-items: center;
-  border-bottom: 1px solid var(--border);
-}
-.hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; }
-.hero-kicker {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: .72rem; font-weight: 600; letter-spacing: .2em;
-  text-transform: uppercase; color: var(--gold);
-  margin-bottom: 32px; opacity: 0;
-}
-.hero-kicker::before, .hero-kicker::after {
-  content: ''; width: 24px; height: 1px; background: var(--gold); flex-shrink: 0;
-}
-.hero-h1 {
-  font-family: var(--serif);
-  font-size: clamp(3rem, 7.5vw, 6.5rem);
-  font-weight: 900; line-height: 1.02;
-  color: var(--text); margin-bottom: 32px;
-  opacity: 0;
-}
-.hero-h1 em { font-style: italic; color: var(--gold); }
-.hero-sub {
-  font-size: clamp(1rem, 2vw, 1.15rem); font-weight: 300;
-  color: var(--text-2); max-width: 540px; line-height: 1.8;
-  margin-bottom: 44px; opacity: 0;
-}
-.hero-btns { display: flex; gap: 14px; flex-wrap: wrap; opacity: 0; }
-.btn-primary {
-  display: inline-block; font-family: var(--sans);
-  font-size: .85rem; font-weight: 600; letter-spacing: .04em;
-  background: var(--text); color: #fff; border: none;
-  padding: 15px 36px; border-radius: 8px; cursor: pointer;
-  text-decoration: none; transition: all .22s;
-}
-.btn-primary:hover { background: #222; transform: translateY(-1px); box-shadow: var(--shadow-h); }
-.btn-outline {
-  display: inline-block; font-family: var(--sans);
-  font-size: .85rem; font-weight: 500; letter-spacing: .04em;
-  background: transparent; color: var(--text);
+/* pill toggle */
+.pill-toggle {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 100px;
+  padding: 3px;
+  gap: 2px;
   border: 1px solid var(--border);
-  padding: 15px 36px; border-radius: 8px; cursor: pointer;
-  text-decoration: none; transition: all .22s;
+  transition: var(--transition);
 }
-.btn-outline:hover { border-color: var(--text); transform: translateY(-1px); }
-.hero-scroll {
-  margin-top: 72px; display: flex; align-items: center; gap: 14px; opacity: 0;
+.pill-toggle button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
 }
-.hero-scroll span { font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-3); }
-.scroll-track {
-  width: 40px; height: 1px; background: var(--border); position: relative; overflow: hidden;
+.pill-toggle button.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
 }
-.scroll-thumb {
-  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: var(--gold); animation: scrollSlide 2s ease-in-out infinite;
-}
-@keyframes scrollSlide { 0%{left:-100%} 100%{left:100%} }
 
-/* ── STATS STRIP ───────────────────────────────────────── */
-#stats {
-  background: var(--white); border-bottom: 1px solid var(--border);
-  padding: 56px 5%;
+/* ── SCROLL CONTAINER ─────────────────────────────────── */
+#scroll-container {
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
 }
-.stats-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-}
-.stat-block {
-  padding: 20px 36px;
-  border-right: 1px solid var(--border);
-  opacity: 0;
-}
-.stat-block:last-child { border-right: none; }
-.stat-num {
-  font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 2.8rem);
-  font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 8px;
-}
-.stat-num .gold { color: var(--gold); }
-.stat-lbl { font-size: .75rem; color: var(--text-2); letter-spacing: .06em; }
+/* hide scrollbar */
+#scroll-container::-webkit-scrollbar { display: none; }
+#scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── STRATEGY ──────────────────────────────────────────── */
-#strategy {
-  padding: var(--section) 5%;
-  border-bottom: 1px solid var(--border);
+/* ── SLIDE BASE ───────────────────────────────────────── */
+.slide {
+  height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 80px 32px 40px;
+  background: var(--bg);
+  transition: var(--transition);
 }
-.strategy-grid {
-  max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start;
+.slide-inner {
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 900px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  overflow: hidden;
+  position: relative;
+  transition: var(--transition);
 }
-.strategy-left { opacity: 0; }
-.strategy-left .section-sub { margin-bottom: 36px; }
-.strategy-points { list-style: none; display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
-.strategy-point {
-  display: flex; align-items: flex-start; gap: 14px;
-  font-size: .9rem; color: var(--text-2); line-height: 1.65;
-}
-.point-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--gold);
-  flex-shrink: 0; margin-top: 8px;
-}
-.strategy-cards { display: flex; flex-direction: column; gap: 14px; opacity: 0; }
-.strategy-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 24px 28px;
-  transition: all .22s; cursor: default;
-}
-.strategy-card:hover {
-  box-shadow: var(--shadow-h); transform: translateY(-2px);
-  border-color: rgba(201,168,76,.3);
-}
-.sc-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
-.sc-icon {
-  width: 38px; height: 38px; border-radius: 8px;
-  background: rgba(201,168,76,.08); display: flex;
-  align-items: center; justify-content: center;
-  font-size: .95rem; flex-shrink: 0;
-}
-.sc-title { font-size: .92rem; font-weight: 600; color: var(--text); }
-.sc-text { font-size: .84rem; color: var(--text-2); line-height: 1.65; }
 
-/* ── PERFORMANCE ───────────────────────────────────────── */
-#performance {
-  padding: var(--section) 5%;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+/* ── DOT INDICATORS ───────────────────────────────────── */
+#dot-nav {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-.perf-header { max-width: 1100px; margin: 0 auto 48px; opacity: 0; }
-.chart-card {
-  max-width: 1100px; margin: 0 auto 48px;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 32px 36px; opacity: 0;
+body.lang-en #dot-nav {
+  right: auto;
+  left: 20px;
 }
-.chart-toprow {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  border: 1.5px solid var(--text-muted);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s, border-color 0.3s;
 }
-.chart-title { font-size: .9rem; font-weight: 600; color: var(--text); }
-.chart-legend { display: flex; gap: 20px; }
-.leg-item { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: var(--text-2); }
-.leg-dot { width: 8px; height: 8px; border-radius: 50%; }
-.chart-wrap { position: relative; height: 320px; }
-#perf-canvas { width: 100% !important; height: 100% !important; }
+.dot.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: scale(1.35);
+}
 
-/* table */
-.perf-table-wrap {
-  max-width: 1100px; margin: 0 auto;
-  border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; opacity: 0;
+/* ── SLIDE 1 — HERO ───────────────────────────────────── */
+#slide-1 .slide-inner {
+  background: var(--surface);
 }
-.perf-table { width: 100%; border-collapse: collapse; }
-.perf-table thead { background: #F5F4F1; }
-.perf-table th {
-  padding: 12px 20px; text-align: left; font-size: .7rem;
-  font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--text-2); border-bottom: 1px solid var(--border);
+#three-canvas {
+  width: 280px;
+  height: 280px;
+  flex-shrink: 0;
 }
-.perf-table tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background .15s; opacity: 0;
+.hero-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 4vw, 46px);
+  font-weight: 900;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 12px;
 }
-.perf-table tbody tr.row-in { opacity: 1; transition: opacity .4s, transform .4s; }
-.perf-table tbody tr:last-child { border-bottom: none; }
-.perf-table tbody tr:hover { background: #F9F8F6; }
-.perf-table td { padding: 14px 20px; font-size: .87rem; color: var(--text-2); }
-.perf-table td:first-child { color: var(--text); font-weight: 600; }
-.perf-table tfoot tr { background: #F5F4F1; border-top: 2px solid var(--border); }
-.perf-table tfoot td { padding: 14px 20px; font-size: .9rem; font-weight: 700; color: var(--text); }
-.pos { color: var(--green); font-weight: 500; }
-.neg { color: var(--red);   font-weight: 500; }
-.gold-val { color: var(--gold-d); font-weight: 700; }
-.badge {
-  display: inline-block; padding: 3px 10px; border-radius: 50px;
-  font-size: .72rem; font-weight: 600;
+.hero-sub {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-align: center;
+  margin-top: 10px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
 }
-.badge-gold { background: rgba(201,168,76,.1); color: var(--gold-d); border: 1px solid rgba(201,168,76,.25); }
-.badge-gray { background: #F0EEE8; color: var(--text-2); border: 1px solid var(--border); }
+.scroll-arrow {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: bounce 2s infinite;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.scroll-arrow svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--gold);
+  fill: none;
+  stroke-width: 2;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
 
-/* ── INDICATORS ────────────────────────────────────────── */
-#indicators {
-  padding: var(--section) 5%;
-  border-bottom: 1px solid var(--border);
-}
-.ind-header { max-width: 1100px; margin: 0 auto 52px; opacity: 0; }
-.ind-stats {
-  max-width: 1100px; margin: 0 auto 52px;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-}
-.ind-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 32px 28px;
-  transition: all .22s; cursor: default; opacity: 0; position: relative; overflow: hidden;
-}
-.ind-card::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
-  height: 2px; background: var(--gold);
-  transform: scaleX(0); transition: transform .3s;
-}
-.ind-card:hover { box-shadow: var(--shadow-h); transform: translateY(-3px); }
-.ind-card:hover::after { transform: scaleX(1); }
-.ind-num {
-  font-family: var(--serif); font-size: 3rem; font-weight: 700;
-  color: var(--text); line-height: 1; margin-bottom: 10px;
-}
-.ind-unit { font-size: 1.5rem; color: var(--gold); }
-.ind-title { font-size: .88rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-.ind-sub { font-size: .8rem; color: var(--text-2); line-height: 1.55; }
-.ind-tooltip {
-  position: absolute; inset: 0; background: var(--card);
-  border-radius: var(--r); padding: 28px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .84rem; color: var(--text-2); line-height: 1.65;
-  text-align: center; opacity: 0; pointer-events: none;
-  transition: opacity .25s;
-}
-.ind-card:hover .ind-tooltip { opacity: 1; }
-.ind-chart-card {
-  max-width: 1100px; margin: 0 auto;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 32px 36px; opacity: 0;
-}
-.ind-chart-card .chart-toprow { margin-bottom: 24px; }
-#signal-canvas { display: block; width: 100%; }
-
-/* ── CONTACT ───────────────────────────────────────────── */
-#contact {
-  padding: var(--section) 5%;
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
-}
-.contact-header { max-width: 1100px; margin: 0 auto 56px; opacity: 0; }
-.contact-grid {
-  max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr 400px; gap: 64px; align-items: start;
-}
-.contact-form-wrap { opacity: 0; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-.form-label { font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); }
-.form-input, .form-textarea, .form-select {
-  font-family: var(--sans); background: var(--bg); border: 1px solid var(--border);
-  color: var(--text); padding: 12px 16px; border-radius: 8px;
-  font-size: .9rem; outline: none; transition: border-color .2s, box-shadow .2s;
-  -webkit-appearance: none;
-}
-.form-input::placeholder, .form-textarea::placeholder { color: var(--text-3); }
-.form-input:focus, .form-textarea:focus, .form-select:focus {
-  border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.1);
-}
-.form-textarea { resize: vertical; min-height: 120px; }
-.btn-submit {
-  width: 100%; font-family: var(--sans); font-size: .88rem; font-weight: 600;
-  background: var(--text); color: #fff; border: none;
-  padding: 15px; border-radius: 8px; cursor: pointer;
-  transition: all .22s; letter-spacing: .03em;
-}
-.btn-submit:hover { background: #222; box-shadow: var(--shadow-h); transform: translateY(-1px); }
-.contact-card { opacity: 0; }
-.daniel-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 36px; margin-bottom: 20px;
-}
-.daniel-avatar {
-  width: 56px; height: 56px; background: rgba(201,168,76,.12);
-  border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--gold);
+/* ── SLIDE 2 — INDICATOR ──────────────────────────────── */
+#slide-2 .slide-inner { background: var(--surface); }
+.slide-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
   margin-bottom: 20px;
 }
-.daniel-name { font-size: 1.25rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.daniel-role { font-size: .8rem; color: var(--gold-d); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 28px; }
-.contact-links { display: flex; flex-direction: column; gap: 12px; }
-.contact-link {
-  display: flex; align-items: center; gap: 14px; padding: 13px 16px;
-  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-  font-size: .87rem; color: var(--text-2); text-decoration: none;
-  transition: all .2s;
+.chart-wrap {
+  width: 100%;
+  max-height: 280px;
+  flex: 1;
+  position: relative;
 }
-.contact-link:hover {
-  border-color: rgba(201,168,76,.4); color: var(--text);
-  background: rgba(201,168,76,.04);
+.chart-wrap canvas { width: 100% !important; }
+.stat-pills {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
-html[dir="rtl"] .contact-link:hover { transform: none; }
-.contact-link-icon {
-  width: 32px; height: 32px; background: rgba(201,168,76,.08);
-  border-radius: 6px; display: flex; align-items: center;
-  justify-content: center; font-size: .85rem; flex-shrink: 0; color: var(--gold-d);
+.stat-pill {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  transition: var(--transition);
 }
-.portal-link {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 8px; font-size: .85rem; color: var(--text-2);
-  text-decoration: none; transition: all .2s;
-}
-.portal-link:hover { border-color: var(--text); color: var(--text); }
-.portal-link-arrow { font-size: .75rem; }
-
-/* ── FOOTER ────────────────────────────────────────────── */
-footer {
-  padding: 48px 5%; background: var(--bg);
-  border-top: 1px solid var(--border);
-}
-.footer-inner {
-  max-width: 1100px; margin: 0 auto;
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 16px;
-}
-.footer-logo { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text); }
-.footer-meta { font-size: .76rem; color: var(--text-3); }
-.footer-disc {
-  max-width: 1100px; margin: 20px auto 0;
-  font-size: .7rem; color: var(--text-3); line-height: 1.6;
+.stat-pill span {
+  color: var(--gold);
 }
 
-/* ── MOBILE ─────────────────────────────────────────────── */
-@media (max-width: 960px) {
-  .nav-links { display: none; }
-  .strategy-grid { grid-template-columns: 1fr; gap: 48px; }
-  .contact-grid { grid-template-columns: 1fr; }
-  .ind-stats { grid-template-columns: 1fr 1fr; }
+/* ── SLIDE 3 — PERFORMANCE ───────────────────────────── */
+#slide-3 .slide-inner { background: var(--surface-2); }
+.perf-numbers {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
 }
+.perf-block {
+  text-align: center;
+}
+.perf-number {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(42px, 7vw, 80px);
+  font-weight: 900;
+  line-height: 1;
+  transition: color 0.3s;
+}
+.perf-number.gold { color: var(--gold); }
+.perf-number.muted { color: var(--text-muted); }
+.perf-label {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.drawdown-section {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dd-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.dd-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.dd-track {
+  height: 10px;
+  background: var(--border);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.dd-bar {
+  height: 100%;
+  border-radius: 100px;
+  width: 0;
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.dd-bar.gold { background: var(--gold); }
+.dd-bar.gray { background: var(--text-muted); }
+.perf-tagline {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 24px;
+  font-style: italic;
+}
+
+/* ── SLIDE 4 — TEAM ───────────────────────────────────── */
+#slide-4 .slide-inner { background: var(--surface); }
+.team-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-top: 20px;
+}
+.team-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 22px;
+  text-align: center;
+  width: 220px;
+  flex-shrink: 0;
+  cursor: default;
+  transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s, background 0.3s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.team-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 8px 32px rgba(201,168,76,0.18);
+  transform: translateY(-4px) !important;
+}
+.team-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), #8A6520);
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #000;
+  font-weight: 700;
+  font-family: 'Roboto', sans-serif;
+}
+.team-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  transition: color 0.3s;
+}
+.team-role {
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+  font-family: 'Roboto', sans-serif;
+}
+.team-bio {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  transition: color 0.3s;
+}
+
+/* ── SLIDE 5 — CONTACT ───────────────────────────────── */
+#slide-5 .slide-inner { background: var(--surface); overflow: hidden; }
+#particles-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.contact-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.contact-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+.form-row input { flex: 1; }
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s, background 0.3s, color 0.3s;
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: var(--text-muted);
+}
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: var(--gold);
+}
+.contact-form textarea {
+  resize: none;
+  height: 90px;
+}
+.btn-submit {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.5px;
+}
+.btn-submit:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-submit:active { transform: translateY(0); }
+.contact-details {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.contact-details a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.contact-details a:hover { color: var(--gold); }
+
+/* ── MOBILE ───────────────────────────────────────────── */
 @media (max-width: 640px) {
-  :root { --section: 72px; }
-  .stats-inner { grid-template-columns: 1fr 1fr; }
-  .stat-block { border-right: none; border-bottom: 1px solid var(--border); }
-  .stat-block:nth-child(odd) { border-right: 1px solid var(--border); }
-  .ind-stats { grid-template-columns: 1fr; }
-  .form-row { grid-template-columns: 1fr; }
-  .chart-card, .ind-chart-card { padding: 20px; }
-  .chart-wrap { height: 220px; }
+  nav { padding: 12px 16px; }
+  .nav-logo { font-size: 12px; letter-spacing: 1.5px; }
+  .pill-toggle button { padding: 5px 9px; font-size: 11px; }
+  .slide { padding: 72px 12px 24px; }
+  .slide-inner { padding: 28px 20px; border-radius: 12px; }
+  #dot-nav { right: 8px; }
+  body.lang-en #dot-nav { left: 8px; right: auto; }
+  #three-canvas { width: 200px; height: 200px; }
+  .perf-numbers { gap: 24px; }
+  .team-cards { gap: 12px; }
+  .team-card { width: 100%; max-width: 280px; }
+  .form-row { flex-direction: column; gap: 12px; }
 }
 </style>
 </head>
-<body>
+<body class="lang-he">
 
-<div id="progress"></div>
-
-<!-- ── NAV ────────────────────────────────────────────── -->
-<nav id="nav">
-  <div class="nav-inner">
-    <a href="#" class="nav-logo">
-      <svg class="nav-logo-mark" viewBox="0 0 30 30" fill="none">
-        <circle cx="15" cy="15" r="13.5" stroke="#C9A84C" stroke-width="1.4"/>
-        <ellipse cx="15" cy="15" rx="7" ry="2.8" stroke="#C9A84C" stroke-width="1.3" transform="rotate(-28 15 15)"/>
-        <circle cx="15" cy="15" r="2.2" fill="#C9A84C"/>
-      </svg>
-      <span class="nav-logo-text" data-en="Uranus Capital" data-he="יורנוס קפיטל">Uranus Capital</span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="#performance" data-en="Performance" data-he="ביצועים">Performance</a></li>
-      <li><a href="#strategy"    data-en="Strategy"    data-he="אסטרטגיה">Strategy</a></li>
-      <li><a href="#indicators"  data-en="Indicators"  data-he="אינדיקטורים">Indicators</a></li>
-      <li><a href="#contact"     data-en="Contact"     data-he="צור קשר">Contact</a></li>
-    </ul>
-    <div class="nav-end">
-      <button class="lang-btn" id="langBtn" onclick="toggleLang()">עברית</button>
-      <a href="/portal/login.html" class="btn-nav" data-en="Client Portal" data-he="פורטל לקוחות">Client Portal</a>
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">URANUS CAPITAL</a>
+  <div class="nav-controls">
+    <div class="pill-toggle" id="lang-toggle">
+      <button id="btn-he" class="active" onclick="setLang('he')">עב</button>
+      <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <div class="pill-toggle" id="theme-toggle">
+      <button id="btn-light" class="active" onclick="setTheme('light')">☀️</button>
+      <button id="btn-dark" onclick="setTheme('dark')">🌙</button>
     </div>
   </div>
 </nav>
 
-<!-- ── HERO ───────────────────────────────────────────── -->
-<section id="hero">
-  <div class="hero-inner">
-    <div class="hero-kicker" data-en="Bitcoin & Gold Investment Advisory" data-he="ייעוץ השקעות בביטקוין וזהב">Bitcoin &amp; Gold Investment Advisory</div>
-    <h1 class="hero-h1">
-      <span data-en="Wealth that" data-he="עושר שצומח">Wealth that</span><br/>
-      <em data-en="rises above" data-he="מעל">rises above</em><br/>
-      <span data-en="the market." data-he="השוק.">the market.</span>
-    </h1>
-    <p class="hero-sub" data-en="Professional Bitcoin and gold advisory delivering 4,546% total returns since 2020, through disciplined risk management and proprietary signal systems." data-he="ייעוץ מקצועי לביטקוין וזהב עם תשואה כוללת של 4,546% מאז 2020, דרך ניהול סיכונים מחושב ומערכת אותות קניינית.">
-      Professional Bitcoin and gold advisory delivering 4,546% total returns since 2020, through disciplined risk management and proprietary signal systems.
-    </p>
-    <div class="hero-btns">
-      <a href="#contact"     class="btn-primary" data-en="Schedule Consultation" data-he="קבע פגישת ייעוץ">Schedule Consultation</a>
-      <a href="#performance" class="btn-outline"  data-en="View Track Record"    data-he="צפה ברקורד">View Track Record</a>
-    </div>
-    <div class="hero-scroll">
-      <span data-en="Scroll to explore" data-he="גלול לחקור">Scroll to explore</span>
-      <div class="scroll-track"><div class="scroll-thumb"></div></div>
-    </div>
-  </div>
-</section>
+<!-- DOT NAV -->
+<div id="dot-nav">
+  <div class="dot active" data-slide="0" onclick="goToSlide(0)"></div>
+  <div class="dot" data-slide="1" onclick="goToSlide(1)"></div>
+  <div class="dot" data-slide="2" onclick="goToSlide(2)"></div>
+  <div class="dot" data-slide="3" onclick="goToSlide(3)"></div>
+  <div class="dot" data-slide="4" onclick="goToSlide(4)"></div>
+</div>
 
-<!-- ── STATS STRIP ─────────────────────────────────────── -->
-<section id="stats">
-  <div class="stats-inner">
-    <div class="stat-block">
-      <div class="stat-num"><span class="counter gold-val" data-target="4546" data-suffix="%">0%</span></div>
-      <div class="stat-lbl" data-en="Total Returns — 2020 to 2025" data-he="תשואה כוללת — 2020 עד 2025">Total Returns — 2020 to 2025</div>
-    </div>
-    <div class="stat-block">
-      <div class="stat-num"><span style="color:var(--text)">71</span><span style="color:var(--gold)">–</span><span class="gold-val">85%</span></div>
-      <div class="stat-lbl" data-en="Signal Win Rate Range" data-he="טווח שיעור הצלחת אותות">Signal Win Rate Range</div>
-    </div>
-    <div class="stat-block">
-      <div class="stat-num"><span class="counter" data-target="23" data-suffix="%" style="color:var(--text)">0%</span></div>
-      <div class="stat-lbl" data-en="Average Max Drawdown — vs 42% Bitcoin" data-he="ירידה מקסימלית ממוצעת — לעומת 42% ביטקוין">Avg Max Drawdown — vs 42% BTC</div>
-    </div>
-    <div class="stat-block">
-      <div class="stat-num"><span class="counter gold-val" data-target="5" data-suffix="/6">0/6</span></div>
-      <div class="stat-lbl" data-en="Profitable Years Since Inception" data-he="שנות רווח מאז ההקמה">Profitable Years Since Inception</div>
-    </div>
-  </div>
-</section>
+<!-- SCROLL CONTAINER -->
+<div id="scroll-container">
 
-<!-- ── STRATEGY ────────────────────────────────────────── -->
-<section id="strategy">
-  <div class="container">
-    <div class="strategy-grid">
-      <div class="strategy-left">
-        <div class="section-tag" data-en="◆ Why Uranus Capital" data-he="◆ למה יורנוס קפיטל">◆ Why Uranus Capital</div>
-        <h2 class="section-title" data-en="Not just Bitcoin.<br/>A complete strategy." data-he="לא רק ביטקוין.<br/>אסטרטגיה שלמה.">Not just Bitcoin.<br/>A complete strategy.</h2>
-        <p class="section-sub" data-en="Most crypto investors ride volatility blindly. We use Bitcoin's asymmetric upside combined with gold's stability — and time every position with proprietary signals." data-he="רוב משקיעי הקריפטו רוכבים על התנודתיות בעיניים עצומות. אנחנו משתמשים ביתרון האסימטרי של ביטקוין בשילוב יציבות הזהב — ומעתים כל פוזיציה עם אותות קניינית.">
-          Most crypto investors ride volatility blindly. We use Bitcoin's asymmetric upside combined with gold's stability — and time every position with proprietary signals.
-        </p>
-        <ul class="strategy-points">
-          <li class="strategy-point">
-            <div class="point-dot"></div>
-            <span data-en="Capital protection in bear markets — only −17.7% in 2022 vs Bitcoin's −65.4%." data-he="הגנת הון בשוקי דובי — רק −17.7% ב-2022 לעומת −65.4% של ביטקוין.">Capital protection in bear markets — only −17.7% in 2022 vs Bitcoin's −65.4%.</span>
-          </li>
-          <li class="strategy-point">
-            <div class="point-dot"></div>
-            <span data-en="Outperformed Bitcoin in 4 of 6 years while using lower leverage and tighter risk controls." data-he="עקף את ביטקוין ב-4 מתוך 6 שנים תוך שימוש במינוף נמוך יותר ובקרות סיכון מחמירות.">Outperformed Bitcoin in 4 of 6 years while using lower leverage and tighter risk controls.</span>
-          </li>
-          <li class="strategy-point">
-            <div class="point-dot"></div>
-            <span data-en="Direct access to Daniel Yahid — no fund layers, no hidden fees, personal advisory." data-he="גישה ישירה לדניאל יהיד — ללא שכבות קרן, ללא עמלות נסתרות, ייעוץ אישי.">Direct access to Daniel Yahid — no fund layers, no hidden fees, personal advisory.</span>
-          </li>
-        </ul>
-      </div>
-      <div class="strategy-cards">
-        <div class="strategy-card">
-          <div class="sc-head">
-            <div class="sc-icon">⛓</div>
-            <div class="sc-title" data-en="On-Chain Analytics" data-he="אנליטיקס אונ-צ'יין">On-Chain Analytics</div>
-          </div>
-          <p class="sc-text" data-en="Whale wallet flows, exchange balances, miner behavior — decoded before the market reacts." data-he="זרימת ארנקי ביג פלייר, יתרות בורסה, התנהגות כורים — מפוענחים לפני שהשוק מגיב.">Whale wallet flows, exchange balances, miner behavior — decoded before the market reacts.</p>
-        </div>
-        <div class="strategy-card">
-          <div class="sc-head">
-            <div class="sc-icon">📊</div>
-            <div class="sc-title" data-en="Macro Cycle Timing" data-he="עיתוי מחזור מאקרו">Macro Cycle Timing</div>
-          </div>
-          <p class="sc-text" data-en="Dollar index, global liquidity, gold correlation — positions aligned with multi-month macro regimes." data-he="מדד הדולר, נזילות עולמית, קורלציה לזהב — פוזיציות מיושרות עם משטרי מאקרו רב-חודשיים.">Dollar index, global liquidity, gold correlation — positions aligned with multi-month macro regimes.</p>
-        </div>
-        <div class="strategy-card">
-          <div class="sc-head">
-            <div class="sc-icon">🛡</div>
-            <div class="sc-title" data-en="Asymmetric Risk Management" data-he="ניהול סיכונים אסימטרי">Asymmetric Risk Management</div>
-          </div>
-          <p class="sc-text" data-en="Hard stops on every position. Average max drawdown of 23% vs Bitcoin's 42% over 6 years." data-he="סטופים קשים על כל פוזיציה. ירידה מקסימלית ממוצעת של 23% לעומת 42% של ביטקוין ב-6 שנים.">Hard stops on every position. Avg max drawdown 23% vs Bitcoin's 42% over 6 years.</p>
-        </div>
+  <!-- SLIDE 1 — HERO -->
+  <section class="slide" id="slide-1">
+    <div class="slide-inner">
+      <canvas id="three-canvas"></canvas>
+      <h1 class="hero-headline">
+        <span class="txt-hero-headline">ניהול הון בביטקוין וזהב</span>
+      </h1>
+      <p class="hero-sub">URANUS CAPITAL</p>
+      <div class="scroll-arrow" onclick="goToSlide(1)">
+        <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── PERFORMANCE ─────────────────────────────────────── -->
-<section id="performance">
-  <div class="container">
-    <div class="perf-header">
-      <div class="section-tag" data-en="◆ Track Record" data-he="◆ רקורד">◆ Track Record</div>
-      <h2 class="section-title" data-en="Six years of verified returns." data-he="שש שנות תשואות מאומתות.">Six years of verified returns.</h2>
-      <p class="section-sub" data-en="Uranus Capital vs Bitcoin — compounding from a $100 base, 2020–2025." data-he="יורנוס קפיטל מול ביטקוין — ריבית דריבית מבסיס של $100, 2020–2025.">Uranus Capital vs Bitcoin — compounding from a $100 base, 2020–2025.</p>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-toprow">
-        <div class="chart-title" data-en="Cumulative Growth Index (Base 100)" data-he="מדד צמיחה מצטבר (בסיס 100)">Cumulative Growth Index (Base 100)</div>
-        <div class="chart-legend">
-          <div class="leg-item"><div class="leg-dot" style="background:#C9A84C"></div><span data-en="Uranus Capital" data-he="יורנוס קפיטל">Uranus Capital</span></div>
-          <div class="leg-item"><div class="leg-dot" style="background:#BEBEBE"></div><span data-en="Bitcoin" data-he="ביטקוין">Bitcoin</span></div>
-        </div>
-      </div>
+  <!-- SLIDE 2 — INDICATOR -->
+  <section class="slide" id="slide-2">
+    <div class="slide-inner">
+      <h2 class="slide-title txt-indicator-title">האינדיקטור הקנייני שלנו</h2>
       <div class="chart-wrap">
-        <canvas id="perf-canvas"></canvas>
+        <canvas id="btc-chart"></canvas>
+      </div>
+      <div class="stat-pills">
+        <div class="stat-pill"><span class="txt-stat-wr">שיעור ניצחון</span> <span>78%</span></div>
+        <div class="stat-pill"><span class="txt-stat-sig">איתותים</span> <span>200+</span></div>
+        <div class="stat-pill"><span class="txt-stat-acc">דיוק</span> <span>85%</span></div>
       </div>
     </div>
+  </section>
 
-    <div class="perf-table-wrap">
-      <table class="perf-table">
-        <thead>
-          <tr>
-            <th data-en="Year"           data-he="שנה">Year</th>
-            <th data-en="Uranus Capital" data-he="יורנוס קפיטל">Uranus Capital</th>
-            <th data-en="Bitcoin"        data-he="ביטקוין">Bitcoin</th>
-            <th data-en="MaxDD — Uranus" data-he="MaxDD — יורנוס">MaxDD — Uranus</th>
-            <th data-en="MaxDD — BTC"    data-he="MaxDD — BTC">MaxDD — BTC</th>
-            <th data-en="Edge"           data-he="יתרון">Edge</th>
-          </tr>
-        </thead>
-        <tbody id="perf-tbody">
-          <tr><td>2020</td><td class="pos">+181.3%</td><td class="pos">+303.3%</td><td>32.3%</td><td>53.3%</td><td><span class="badge badge-gray" data-en="BTC +122%" data-he="BTC +122%">BTC +122%</span></td></tr>
-          <tr><td>2021</td><td class="pos">+191.7%</td><td class="pos">+57.2%</td> <td>21.3%</td><td>53.1%</td><td><span class="badge badge-gold" data-en="Us +134.5%" data-he="אנחנו +134.5%">Us +134.5%</span></td></tr>
-          <tr><td>2022</td><td class="neg">−17.7%</td> <td class="neg">−65.4%</td> <td>24.4%</td><td>67.0%</td><td><span class="badge badge-gold" data-en="Us +47.7%" data-he="אנחנו +47.7%">Us +47.7%</span></td></tr>
-          <tr><td>2023</td><td class="pos">+91.4%</td> <td class="pos">+154.3%</td><td>18.6%</td><td>20.1%</td><td><span class="badge badge-gray" data-en="BTC +62.9%" data-he="BTC +62.9%">BTC +62.9%</span></td></tr>
-          <tr><td>2024</td><td class="pos">+155.5%</td><td class="pos">+111.3%</td><td>16.0%</td><td>26.2%</td><td><span class="badge badge-gold" data-en="Us +44.2%" data-he="אנחנו +44.2%">Us +44.2%</span></td></tr>
-          <tr><td>2025</td><td class="pos">+40.7%</td> <td class="neg">−6.34%</td> <td>25.1%</td><td>32.1%</td><td><span class="badge badge-gold" data-en="Us +47%" data-he="אנחנו +47%">Us +47%</span></td></tr>
-        </tbody>
-        <tfoot>
-          <tr>
-            <td data-en="Total 2020–2025" data-he="סה״כ 2020–2025">Total 2020–2025</td>
-            <td><span class="gold-val" id="total-u">+0%</span></td>
-            <td style="color:var(--text-2)">+1,004%</td>
-            <td colspan="2" style="color:var(--text-2);font-size:.8rem" data-en="Avg 23% vs 42%" data-he="ממוצע 23% לעומת 42%">Avg 23% vs 42%</td>
-            <td><span class="badge badge-gold" data-en="4.5× Better" data-he="4.5× טוב יותר">4.5× Better</span></td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- ── INDICATORS ──────────────────────────────────────── -->
-<section id="indicators">
-  <div class="container">
-    <div class="ind-header">
-      <div class="section-tag" data-en="◆ Signal System" data-he="◆ מערכת אותות">◆ Signal System</div>
-      <h2 class="section-title" data-en="Proprietary indicators.<br/>Consistent edge." data-he="אינדיקטורים קניינים.<br/>יתרון עקבי.">Proprietary indicators.<br/>Consistent edge.</h2>
-      <p class="section-sub" data-en="Built over five years of live trading across Bitcoin and gold markets. Every signal is tracked, measured, and refined." data-he="נבנה במשך חמש שנות מסחר חי בשווקי ביטקוין וזהב. כל אות נעקב, נמדד ומשופר.">Built over five years of live trading across Bitcoin and gold markets. Every signal is tracked, measured, and refined.</p>
-    </div>
-
-    <div class="ind-stats">
-      <div class="ind-card">
-        <div class="ind-num"><span class="counter" data-target="78">0</span><span class="ind-unit">%</span></div>
-        <div class="ind-title" data-en="Average Win Rate" data-he="שיעור הצלחה ממוצע">Average Win Rate</div>
-        <div class="ind-sub"  data-en="Across all signals 2020–2025" data-he="בכל האותות 2020–2025">Across all signals 2020–2025</div>
-        <div class="ind-tooltip" data-en="78% of all signals closed in profit. Range of 71–85% depending on market conditions. Measured across 200+ live trades." data-he="78% מכל האותות נסגרו ברווח. טווח של 71–85% בהתאם לתנאי השוק. נמדד על פני 200+ עסקאות חיות.">78% of all signals closed in profit. Range 71–85% depending on market conditions. 200+ live trades measured.</div>
-      </div>
-      <div class="ind-card">
-        <div class="ind-num"><span class="counter" data-target="200">0</span><span class="ind-unit">+</span></div>
-        <div class="ind-title" data-en="Signals Dispatched" data-he="אותות שנשלחו">Signals Dispatched</div>
-        <div class="ind-sub"  data-en="Live signals to clients since 2020" data-he="אותות חיים ללקוחות מאז 2020">Live signals to clients since 2020</div>
-        <div class="ind-tooltip" data-en="Over 200 trade signals dispatched across Bitcoin long/short, gold entries, and risk-off alerts to clients since inception." data-he="מעל 200 אותות מסחר שנשלחו בביטקוין לונג/שורט, כניסות זהב, והתראות אוף-ריסק ללקוחות מאז ההקמה.">Over 200 signals across BTC long/short, gold entries, and risk-off alerts since inception.</div>
-      </div>
-      <div class="ind-card">
-        <div class="ind-num"><span class="counter" data-target="85">0</span><span class="ind-unit">%</span></div>
-        <div class="ind-title" data-en="Peak Monthly Accuracy" data-he="דיוק חודשי שיא">Peak Monthly Accuracy</div>
-        <div class="ind-sub"  data-en="Best month achieved: Q4 2024 rally" data-he="החודש הטוב ביותר: עלייה Q4 2024">Best month achieved: Q4 2024 rally</div>
-        <div class="ind-tooltip" data-en="In October–November 2024, signal accuracy reached 85% during Bitcoin's breakout above $70K. Seven of eight signals closed profitably." data-he="באוקטובר-נובמבר 2024, דיוק האותות הגיע ל-85% במהלך הפריצה של ביטקוין מעל $70K. שבעה מתוך שמונה אותות נסגרו ברווח.">In Q4 2024, signal accuracy reached 85% during Bitcoin's breakout. 7 of 8 signals closed profitably.</div>
-      </div>
-    </div>
-
-    <div class="ind-chart-card">
-      <div class="chart-toprow">
-        <div class="chart-title" data-en="Sample Signal Performance — Simulated BTC entries" data-he="ביצועי אותות לדוגמה — כניסות BTC מדומות">Sample Signal Performance — Simulated BTC entries</div>
-        <div style="display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--text-2)">
-          <span style="color:var(--green);font-weight:600" data-en="▲ Buy signal" data-he="▲ אות קנייה">▲ Buy signal</span>
-          <span style="color:var(--red);font-weight:600"   data-en="▼ Sell signal" data-he="▼ אות מכירה">▼ Sell signal</span>
+  <!-- SLIDE 3 — PERFORMANCE -->
+  <section class="slide" id="slide-3">
+    <div class="slide-inner">
+      <div class="perf-numbers">
+        <div class="perf-block">
+          <div class="perf-number gold" id="count-uc">0%</div>
+          <div class="perf-label txt-perf-uc-label">Uranus Capital 2020–2025</div>
+        </div>
+        <div class="perf-block">
+          <div class="perf-number muted" id="count-btc">0%</div>
+          <div class="perf-label txt-perf-btc-label">Bitcoin</div>
         </div>
       </div>
-      <canvas id="signal-canvas" height="220"></canvas>
+      <div class="drawdown-section">
+        <div class="dd-row">
+          <div class="dd-label">
+            <span class="txt-dd-uc">Uranus MaxDD</span><span>23%</span>
+          </div>
+          <div class="dd-track"><div class="dd-bar gold" id="dd-uc"></div></div>
+        </div>
+        <div class="dd-row">
+          <div class="dd-label">
+            <span class="txt-dd-btc">Bitcoin MaxDD</span><span>42%</span>
+          </div>
+          <div class="dd-track"><div class="dd-bar gray" id="dd-btc"></div></div>
+        </div>
+      </div>
+      <p class="perf-tagline txt-perf-tagline">תשואה עודפת. סיכון נמוך יותר.</p>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── CONTACT ─────────────────────────────────────────── -->
-<section id="contact">
-  <div class="container">
-    <div class="contact-header">
-      <div class="section-tag" data-en="◆ Get Started" data-he="◆ התחל">◆ Get Started</div>
-      <h2 class="section-title" data-en="Work with Daniel Yahid." data-he="עבוד עם דניאל יהיד.">Work with Daniel Yahid.</h2>
-      <p class="section-sub" data-en="Direct access. No intermediaries. Personalized strategy built around your goals." data-he="גישה ישירה. ללא מתווכים. אסטרטגיה אישית הבנויה סביב המטרות שלך.">Direct access. No intermediaries. Personalized strategy built around your goals.</p>
+  <!-- SLIDE 4 — TEAM -->
+  <section class="slide" id="slide-4">
+    <div class="slide-inner">
+      <h2 class="slide-title txt-team-title">הצוות</h2>
+      <div class="team-cards">
+        <div class="team-card" id="card-0">
+          <div class="team-avatar">DY</div>
+          <div class="team-name">Daniel Yahid</div>
+          <div class="team-role txt-role-biz">Business Development</div>
+          <p class="team-bio txt-bio-daniel">מומחה בפיתוח עסקי ויצירת שותפויות אסטרטגיות בתחום נכסים דיגיטליים.</p>
+        </div>
+        <div class="team-card" id="card-1">
+          <div class="team-avatar">MC</div>
+          <div class="team-name">Matan Cohen</div>
+          <div class="team-role txt-role-analyst">Lead Analyst</div>
+          <p class="team-bio txt-bio-matan">אנליסט ראשי עם ניסיון רב בניתוח טכני ופיתוח אלגוריתמים.</p>
+        </div>
+        <div class="team-card" id="card-2">
+          <div class="team-avatar">TB</div>
+          <div class="team-name">Tom Bukai</div>
+          <div class="team-role txt-role-ceo">CEO &amp; Founder</div>
+          <p class="team-bio txt-bio-tom">מייסד ומנכ"ל, מוביל את האסטרטגיה ואת החזון של Uranus Capital.</p>
+        </div>
+      </div>
     </div>
-    <div class="contact-grid">
-      <div class="contact-form-wrap">
-        <form onsubmit="submitForm(event)">
+  </section>
+
+  <!-- SLIDE 5 — CONTACT -->
+  <section class="slide" id="slide-5">
+    <div class="slide-inner">
+      <canvas id="particles-canvas"></canvas>
+      <div class="contact-inner">
+        <h2 class="slide-title txt-contact-title">מוכן להתחיל?</h2>
+        <form class="contact-form" onsubmit="handleSubmit(event)">
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" data-en="Full Name" data-he="שם מלא">Full Name</label>
-              <input class="form-input" type="text" placeholder="John Smith" required/>
-            </div>
-            <div class="form-group">
-              <label class="form-label" data-en="Email" data-he="אימייל">Email</label>
-              <input class="form-input" type="email" placeholder="you@example.com" required/>
-            </div>
+            <input type="text" class="txt-input-name" placeholder="שם מלא" required/>
+            <input type="tel" class="txt-input-phone" placeholder="טלפון" required/>
           </div>
-          <div class="form-group">
-            <label class="form-label" data-en="Phone" data-he="טלפון">Phone</label>
-            <input class="form-input" type="tel" placeholder="+972 50 000 0000"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-en="I'm interested in" data-he="אני מעוניין ב">I'm interested in</label>
-            <select class="form-select">
-              <option data-en="Select..."        data-he="בחר...">Select...</option>
-              <option data-en="Bitcoin Strategy" data-he="אסטרטגיית ביטקוין">Bitcoin Strategy</option>
-              <option data-en="Gold Strategy"    data-he="אסטרטגיית זהב">Gold Strategy</option>
-              <option data-en="Combined Portfolio" data-he="תיק משולב">Combined Portfolio</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-en="Message" data-he="הודעה">Message</label>
-            <textarea class="form-textarea" placeholder="Tell us about your investment goals..."></textarea>
-          </div>
-          <button type="submit" class="btn-submit" data-en="Send Message" data-he="שלח הודעה">Send Message</button>
+          <input type="email" class="txt-input-email" placeholder="אימייל" required/>
+          <textarea class="txt-input-msg" placeholder="הודעה"></textarea>
+          <button type="submit" class="btn-submit txt-btn-submit">שלח פנייה</button>
         </form>
-      </div>
-      <div class="contact-card">
-        <div class="daniel-card">
-          <div class="daniel-avatar">D</div>
-          <div class="daniel-name">Daniel Yahid</div>
-          <div class="daniel-role" data-en="Founder & Chief Investment Officer" data-he="מייסד ומנכ״ל השקעות">Founder &amp; CIO</div>
-          <div class="contact-links">
-            <a href="mailto:daniel.yahid@gmail.com" class="contact-link">
-              <div class="contact-link-icon">✉</div>
-              <span>daniel.yahid@gmail.com</span>
-            </a>
-            <a href="tel:+972503838314" class="contact-link">
-              <div class="contact-link-icon">☎</div>
-              <span>050-383-8314</span>
-            </a>
-          </div>
+        <div class="contact-details">
+          <a href="mailto:daniel.yahid@gmail.com">daniel.yahid@gmail.com</a>
+          <a href="tel:+972503838314">050-383-8314</a>
         </div>
-        <a href="/portal/login.html" class="portal-link">
-          <span data-en="Access Client Portal" data-he="כניסה לפורטל לקוחות">Access Client Portal</span>
-          <span class="portal-link-arrow">→</span>
-        </a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ── FOOTER ──────────────────────────────────────────── -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-logo">Uranus Capital</div>
-    <div class="footer-meta">© 2025 · <span data-en="Managed by Daniel Yahid" data-he="מנוהל על ידי דניאל יהיד">Managed by Daniel Yahid</span></div>
-  </div>
-  <p class="footer-disc" data-en="Past performance is not indicative of future results. Investment in cryptocurrencies and precious metals involves significant risk of loss. This website is for informational purposes only and does not constitute financial advice. Always consult a qualified financial advisor before making investment decisions." data-he="ביצועי עבר אינם מעידים על תוצאות עתידיות. השקעה בקריפטו ובמתכות יקרות כרוכה בסיכון הפסד משמעותי. אתר זה הינו למטרות מידע בלבד ואינו מהווה ייעוץ פיננסי.">
-    Past performance is not indicative of future results. Investment in cryptocurrencies and precious metals involves significant risk of loss. This website is for informational purposes only and does not constitute financial advice.
-  </p>
-</footer>
+</div><!-- end #scroll-container -->
+
+<!-- LIBRARIES -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
-gsap.registerPlugin(ScrollTrigger);
-
-/* ═══════════════════════════════════════════════
-   SCROLL PROGRESS + NAV
-═══════════════════════════════════════════════ */
-window.addEventListener('scroll', () => {
-  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
-  document.getElementById('progress').style.width = pct + '%';
-  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
-}, { passive: true });
-
-/* ═══════════════════════════════════════════════
-   REVEAL HELPER  — wraps fromTo so from-state
-   is always explicit, no transform thrash
-═══════════════════════════════════════════════ */
-function reveal(targets, vars = {}) {
-  const { delay = 0, x = 0, y = 24, trigger, start = 'top 80%', once = true, stagger } = vars;
-  const from = { opacity: 0, y, x };
-  const to   = { opacity: 1, y: 0, x: 0, duration: .8, delay, ease: 'power2.out', stagger };
-  if (trigger) {
-    to.scrollTrigger = { trigger, start, toggleActions: once ? 'play none none none' : 'play none none reverse' };
-  }
-  gsap.fromTo(targets, from, to);
-}
-
-/* ═══════════════════════════════════════════════
-   HERO ENTRANCE  (time-based, no ScrollTrigger)
-═══════════════════════════════════════════════ */
-gsap.fromTo('.hero-kicker', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .9, delay: .3, ease: 'power2.out' });
-gsap.fromTo('.hero-h1',     { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1.1, delay: .55, ease: 'power2.out' });
-gsap.fromTo('.hero-sub',    { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .9, delay: .85, ease: 'power2.out' });
-gsap.fromTo('.hero-btns',   { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .8, delay: 1.1, ease: 'power2.out' });
-gsap.fromTo('.hero-scroll', { opacity: 0 },         { opacity: 1, duration: .8, delay: 1.5, ease: 'power2.out' });
-
-/* ═══════════════════════════════════════════════
-   STATS STRIP — counters
-═══════════════════════════════════════════════ */
-ScrollTrigger.create({
-  trigger: '#stats', start: 'top 85%', once: true,
-  onEnter() {
-    gsap.fromTo('.stat-block',
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: .7, ease: 'power2.out', stagger: .1 }
-    );
-    document.querySelectorAll('.counter').forEach((el, i) => {
-      setTimeout(() => animateCounter(el), i * 120);
-    });
-  }
-});
-
-/* ═══════════════════════════════════════════════
-   STRATEGY
-═══════════════════════════════════════════════ */
-reveal('.strategy-left',  { trigger: '#strategy', start: 'top 75%', x: -24, y: 0 });
-reveal('.strategy-cards', { trigger: '#strategy', start: 'top 70%', x: 24, y: 0, delay: .15 });
-
-/* ═══════════════════════════════════════════════
-   PERFORMANCE  — chart + table
-═══════════════════════════════════════════════ */
-let perfChart;
-
-const clipPlugin = {
-  id: 'clip',
-  beforeDraw(chart) {
-    const { ctx, chartArea } = chart;
-    const p = chart._drawP ?? 1;
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(chartArea.left, chartArea.top - 4, (chartArea.right - chartArea.left) * p, chartArea.bottom - chartArea.top + 8);
-    ctx.clip();
+/* ────────────────────────────────────────────────────────
+   TRANSLATIONS
+──────────────────────────────────────────────────────── */
+const T = {
+  he: {
+    'txt-hero-headline': 'ניהול הון בביטקוין וזהב',
+    'txt-indicator-title': 'האינדיקטור הקנייני שלנו',
+    'txt-stat-wr': 'שיעור ניצחון',
+    'txt-stat-sig': 'איתותים',
+    'txt-stat-acc': 'דיוק',
+    'txt-perf-uc-label': 'Uranus Capital 2020–2025',
+    'txt-perf-btc-label': 'Bitcoin',
+    'txt-dd-uc': 'Uranus MaxDD',
+    'txt-dd-btc': 'Bitcoin MaxDD',
+    'txt-perf-tagline': 'תשואה עודפת. סיכון נמוך יותר.',
+    'txt-team-title': 'הצוות',
+    'txt-role-biz': 'Business Development',
+    'txt-role-analyst': 'Lead Analyst',
+    'txt-role-ceo': 'CEO & Founder',
+    'txt-bio-daniel': 'מומחה בפיתוח עסקי ויצירת שותפויות אסטרטגיות בתחום נכסים דיגיטליים.',
+    'txt-bio-matan': 'אנליסט ראשי עם ניסיון רב בניתוח טכני ופיתוח אלגוריתמים.',
+    'txt-bio-tom': 'מייסד ומנכ"ל, מוביל את האסטרטגיה ואת החזון של Uranus Capital.',
+    'txt-contact-title': 'מוכן להתחיל?',
+    'txt-input-name': 'שם מלא',
+    'txt-input-phone': 'טלפון',
+    'txt-input-email': 'אימייל',
+    'txt-input-msg': 'הודעה',
+    'txt-btn-submit': 'שלח פנייה',
   },
-  afterDraw(chart) { chart.ctx.restore(); }
+  en: {
+    'txt-hero-headline': 'Bitcoin & Gold Wealth Management',
+    'txt-indicator-title': 'Our Proprietary Indicator',
+    'txt-stat-wr': 'Win Rate',
+    'txt-stat-sig': 'Signals',
+    'txt-stat-acc': 'Accuracy',
+    'txt-perf-uc-label': 'Uranus Capital 2020–2025',
+    'txt-perf-btc-label': 'Bitcoin',
+    'txt-dd-uc': 'Uranus MaxDD',
+    'txt-dd-btc': 'Bitcoin MaxDD',
+    'txt-perf-tagline': 'Superior returns. Lower risk.',
+    'txt-team-title': 'The Team',
+    'txt-role-biz': 'Business Development',
+    'txt-role-analyst': 'Lead Analyst',
+    'txt-role-ceo': 'CEO & Founder',
+    'txt-bio-daniel': 'Expert in business development and strategic partnerships in digital assets.',
+    'txt-bio-matan': 'Lead analyst with extensive experience in technical analysis and algorithm development.',
+    'txt-bio-tom': 'CEO & Founder, driving strategy and vision at Uranus Capital.',
+    'txt-contact-title': 'Ready to Start?',
+    'txt-input-name': 'Full Name',
+    'txt-input-phone': 'Phone',
+    'txt-input-email': 'Email',
+    'txt-input-msg': 'Message',
+    'txt-btn-submit': 'Send Inquiry',
+  }
 };
 
-ScrollTrigger.create({
-  trigger: '#performance', start: 'top 75%', once: true,
-  onEnter() {
-    reveal('.perf-header',    { y: 20 });
-    reveal('.chart-card',     { y: 24, delay: .15 });
-    reveal('.perf-table-wrap',{ y: 20, delay: .3 });
-    setTimeout(buildChart, 300);
-    setTimeout(revealRows,  700);
-    setTimeout(() => animateCounterTo(document.getElementById('total-u'), 4546, '+', '%', 2000), 800);
+let currentLang = localStorage.getItem('uc-lang') || 'he';
+let currentTheme = localStorage.getItem('uc-theme') || 'light';
+
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('uc-lang', lang);
+  document.documentElement.lang = lang;
+  document.body.className = document.body.className
+    .replace(/lang-(he|en)/g, '')
+    .trim() + ' lang-' + lang;
+  if (lang === 'he') {
+    document.documentElement.dir = 'rtl';
+    document.getElementById('btn-he').classList.add('active');
+    document.getElementById('btn-en').classList.remove('active');
+  } else {
+    document.documentElement.dir = 'ltr';
+    document.getElementById('btn-en').classList.add('active');
+    document.getElementById('btn-he').classList.remove('active');
   }
-});
+  // translate text nodes
+  const map = T[lang];
+  for (const cls in map) {
+    document.querySelectorAll('.' + cls).forEach(el => {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = map[cls];
+      } else {
+        el.textContent = map[cls];
+      }
+    });
+  }
+  // stat pills: rebuild their content
+  const statPills = document.querySelectorAll('.stat-pill');
+  const stats = [
+    { key: 'txt-stat-wr', val: '78%' },
+    { key: 'txt-stat-sig', val: '200+' },
+    { key: 'txt-stat-acc', val: '85%' },
+  ];
+  statPills.forEach((p, i) => {
+    if (stats[i]) {
+      p.innerHTML = `<span class="${stats[i].key}">${map[stats[i].key]}</span> <span>${stats[i].val}</span>`;
+    }
+  });
+}
 
-function buildChart() {
-  const canvas = document.getElementById('perf-canvas');
-  const ctx    = canvas.getContext('2d');
+function setLang(lang) {
+  applyLang(lang);
+}
 
-  const labels  = ['Jan 2020','Dec 2020','Dec 2021','Dec 2022','Dec 2023','Dec 2024','Jun 2025'];
-  const uranus  = [100, 281.3, 820.6, 675.5, 1292.5, 3302.8, 4647.7];
-  const bitcoin = [100, 403.3, 632.4, 218.6,  556.1, 1172.0, 1098.7];
+function applyTheme(theme) {
+  currentTheme = theme;
+  localStorage.setItem('uc-theme', theme);
+  if (theme === 'dark') {
+    document.body.classList.add('dark');
+    document.getElementById('btn-dark').classList.add('active');
+    document.getElementById('btn-light').classList.remove('active');
+  } else {
+    document.body.classList.remove('dark');
+    document.getElementById('btn-light').classList.add('active');
+    document.getElementById('btn-dark').classList.remove('active');
+  }
+  if (particlesCtx) drawParticles();
+}
 
-  const guFill = ctx.createLinearGradient(0, 0, 0, 320);
-  guFill.addColorStop(0, 'rgba(201,168,76,.18)');
-  guFill.addColorStop(1, 'rgba(201,168,76,.01)');
+function setTheme(theme) {
+  applyTheme(theme);
+}
 
-  const gbFill = ctx.createLinearGradient(0, 0, 0, 320);
-  gbFill.addColorStop(0, 'rgba(160,160,160,.12)');
-  gbFill.addColorStop(1, 'rgba(160,160,160,.01)');
+// init preferences
+applyTheme(currentTheme);
+applyLang(currentLang);
 
-  perfChart = new Chart(ctx, {
+/* ────────────────────────────────────────────────────────
+   SCROLL SNAP + DOT INDICATORS
+──────────────────────────────────────────────────────── */
+const container = document.getElementById('scroll-container');
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.dot');
+let activeSlide = 0;
+const slideActivated = new Set();
+
+function goToSlide(idx) {
+  container.scrollTo({ top: idx * window.innerHeight, behavior: 'smooth' });
+}
+
+function onSlideEnter(idx) {
+  if (slideActivated.has(idx)) return;
+  slideActivated.add(idx);
+  if (idx === 2) animatePerformance();
+  if (idx === 3) animateTeam();
+}
+
+let scrollTimeout;
+container.addEventListener('scroll', () => {
+  clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    const idx = Math.round(container.scrollTop / window.innerHeight);
+    if (idx !== activeSlide) {
+      activeSlide = idx;
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      onSlideEnter(idx);
+    }
+  }, 80);
+}, { passive: true });
+
+/* ────────────────────────────────────────────────────────
+   SLIDE 1 — THREE.JS SPHERE
+──────────────────────────────────────────────────────── */
+(function initThree() {
+  const canvas = document.getElementById('three-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(280, 280);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.z = 3.2;
+
+  // sphere
+  const geo = new THREE.SphereGeometry(1, 64, 64);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xC9A84C,
+    metalness: 0.6,
+    roughness: 0.25,
+  });
+  const sphere = new THREE.Mesh(geo, mat);
+  scene.add(sphere);
+
+  // lights
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambient);
+  const point1 = new THREE.PointLight(0xFFD580, 3, 10);
+  point1.position.set(3, 3, 3);
+  scene.add(point1);
+  const point2 = new THREE.PointLight(0xC9A84C, 2, 10);
+  point2.position.set(-3, -2, 2);
+  scene.add(point2);
+
+  // mouse drag
+  let isDragging = false;
+  let prevX = 0, prevY = 0;
+  let velX = 0, velY = 0;
+  let autoRotate = true;
+  let autoTimer;
+
+  function resetAutoTimer() {
+    clearTimeout(autoTimer);
+    autoRotate = false;
+    autoTimer = setTimeout(() => { autoRotate = true; }, 2000);
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    isDragging = true;
+    prevX = e.clientX; prevY = e.clientY;
+    resetAutoTimer();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const dx = e.clientX - prevX;
+    const dy = e.clientY - prevY;
+    velX = dx * 0.008;
+    velY = dy * 0.008;
+    sphere.rotation.y += velX;
+    sphere.rotation.x += velY;
+    prevX = e.clientX; prevY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  canvas.addEventListener('touchstart', e => {
+    isDragging = true;
+    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+    resetAutoTimer();
+  }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    const dx = e.touches[0].clientX - prevX;
+    const dy = e.touches[0].clientY - prevY;
+    velX = dx * 0.008;
+    velY = dy * 0.008;
+    sphere.rotation.y += velX;
+    sphere.rotation.x += velY;
+    prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
+  }, { passive: true });
+  canvas.addEventListener('touchend', () => { isDragging = false; });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (autoRotate) {
+      sphere.rotation.y += 0.004;
+      sphere.rotation.x += 0.001;
+    } else if (!isDragging) {
+      velX *= 0.92;
+      velY *= 0.92;
+      sphere.rotation.y += velX;
+      sphere.rotation.x += velY;
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+/* ────────────────────────────────────────────────────────
+   SLIDE 2 — BTC CHART
+──────────────────────────────────────────────────────── */
+(function initChart() {
+  const ctx = document.getElementById('btc-chart').getContext('2d');
+
+  const labels = ['Dec','Jan','Feb','Mar','Apr','May','Jun'];
+  const prices = [42000, 52000, 68000, 88000, 74000, 94000, 107000];
+
+  // buy/sell signal indices
+  const buyIdx = [0, 2, 4];
+  const sellIdx = [1, 3, 5];
+
+  const buyData = prices.map((v, i) => buyIdx.includes(i) ? v : null);
+  const sellData = prices.map((v, i) => sellIdx.includes(i) ? v : null);
+
+  const gradientFill = ctx.createLinearGradient(0, 0, 0, 280);
+  gradientFill.addColorStop(0, 'rgba(201,168,76,0.25)');
+  gradientFill.addColorStop(1, 'rgba(201,168,76,0)');
+
+  const chart = new Chart(ctx, {
     type: 'line',
-    plugins: [clipPlugin],
     data: {
       labels,
       datasets: [
         {
-          label: 'Uranus Capital',
-          data: uranus,
+          label: 'BTC',
+          data: prices,
           borderColor: '#C9A84C',
-          backgroundColor: guFill,
           borderWidth: 2.5,
-          pointRadius: 4,
-          pointBackgroundColor: '#C9A84C',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointHoverRadius: 7,
-          fill: true, tension: .4,
+          fill: true,
+          backgroundColor: gradientFill,
+          tension: 0.4,
+          pointRadius: 0,
+          pointHoverRadius: 4,
         },
         {
-          label: 'Bitcoin',
-          data: bitcoin,
-          borderColor: '#BEBEBE',
-          backgroundColor: gbFill,
-          borderWidth: 1.8,
-          pointRadius: 3,
-          pointBackgroundColor: '#BEBEBE',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 1.5,
-          pointHoverRadius: 6,
-          fill: true, tension: .4,
-          borderDash: [5, 4],
-        }
+          label: 'Buy',
+          data: buyData,
+          type: 'scatter',
+          pointStyle: 'triangle',
+          pointRadius: 8,
+          pointBackgroundColor: '#22c55e',
+          borderColor: '#22c55e',
+          borderWidth: 0,
+          showLine: false,
+        },
+        {
+          label: 'Sell',
+          data: sellData,
+          type: 'scatter',
+          pointStyle: ctx => {
+            // flipped triangle for sell — use rotation
+            return 'triangle';
+          },
+          rotation: 180,
+          pointRadius: 8,
+          pointBackgroundColor: '#ef4444',
+          borderColor: '#ef4444',
+          borderWidth: 0,
+          showLine: false,
+        },
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: false,
-      resizeDelay: 0,
-      interaction: { intersect: false, mode: 'index' },
+      animation: {
+        duration: 1800,
+        easing: 'easeInOutQuart',
+      },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#fff',
-          borderColor: '#E8E5E0',
-          borderWidth: 1,
-          titleColor: '#0D0D0D',
-          bodyColor: '#6B6B6B',
-          padding: 14,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+          backgroundColor: 'rgba(26,26,26,0.9)',
+          titleColor: '#C9A84C',
+          bodyColor: '#F0EDE8',
+          padding: 10,
           callbacks: {
-            label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(0)} (${(c.parsed.y - 100).toFixed(0)}% gain)`
+            label: ctx => ctx.dataset.label === 'BTC'
+              ? '$' + ctx.parsed.y.toLocaleString()
+              : ctx.dataset.label,
           }
         }
       },
       scales: {
         x: {
-          grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
-          ticks: { color: '#A8A8A8', font: { size: 11, family: 'DM Sans' } },
-          border: { display: false }
+          grid: { color: 'rgba(128,128,128,0.08)' },
+          ticks: { color: '#8A8680', font: { size: 11 } },
+          border: { display: false },
         },
         y: {
-          grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+          grid: { color: 'rgba(128,128,128,0.08)' },
           ticks: {
-            color: '#A8A8A8', font: { size: 11, family: 'DM Sans' },
-            callback: v => v + 'x'
+            color: '#8A8680',
+            font: { size: 11 },
+            callback: v => '$' + (v/1000).toFixed(0) + 'k',
           },
-          border: { display: false }
+          border: { display: false },
         }
       }
     }
   });
 
-  // Animate draw left-to-right
-  perfChart._drawP = 0;
-  gsap.to({ p: 0 }, {
-    p: 1, duration: 2.2, ease: 'power2.inOut', delay: .1,
-    onUpdate() { perfChart._drawP = this.targets()[0].p; perfChart.update('none'); }
-  });
+  // loop: redraw every 4s
+  let loopTimer;
+  function loopChart() {
+    clearTimeout(loopTimer);
+    chart.destroy();
+    loopTimer = setTimeout(() => {
+      initChart();
+    }, 4000);
+  }
+  // trigger re-animate on loop by updating data
+  function reAnimate() {
+    chart.data.datasets[0].data = prices;
+    chart.update('active');
+  }
+  setTimeout(() => {
+    let step = 0;
+    function tick() {
+      step++;
+      if (step > 3) { step = 0; reAnimate(); }
+      setTimeout(tick, 4000);
+    }
+    setTimeout(tick, 2000);
+  }, 200);
+})();
+
+/* ────────────────────────────────────────────────────────
+   SLIDE 3 — COUNTER + BARS
+──────────────────────────────────────────────────────── */
+function animatePerformance() {
+  function countUp(el, target, suffix, duration) {
+    let start = 0;
+    const step = target / (duration / 16);
+    const interval = setInterval(() => {
+      start += step;
+      if (start >= target) { start = target; clearInterval(interval); }
+      el.textContent = Math.floor(start).toLocaleString() + suffix;
+    }, 16);
+  }
+  countUp(document.getElementById('count-uc'), 4546, '%', 1800);
+  countUp(document.getElementById('count-btc'), 1004, '%', 1400);
+
+  setTimeout(() => {
+    document.getElementById('dd-uc').style.width = '23%';
+    document.getElementById('dd-btc').style.width = '42%';
+  }, 300);
 }
 
-function revealRows() {
-  document.querySelectorAll('#perf-tbody tr').forEach((tr, i) => {
-    setTimeout(() => {
-      gsap.fromTo(tr, { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: .5, ease: 'power2.out' });
-    }, i * 110);
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   INDICATORS
-═══════════════════════════════════════════════ */
-ScrollTrigger.create({
-  trigger: '#indicators', start: 'top 78%', once: true,
-  onEnter() {
-    reveal('.ind-header', { y: 20 });
-    gsap.fromTo('.ind-card',
-      { opacity: 0, y: 24 },
-      { opacity: 1, y: 0, duration: .7, ease: 'power2.out', stagger: .12, delay: .2 }
-    );
-    reveal('.ind-chart-card', { y: 20, delay: .5 });
-    document.querySelectorAll('.ind-card .counter').forEach((el, i) => {
-      setTimeout(() => animateCounter(el), 400 + i * 180);
+/* ────────────────────────────────────────────────────────
+   SLIDE 4 — TEAM STAGGER
+──────────────────────────────────────────────────────── */
+function animateTeam() {
+  const cards = document.querySelectorAll('.team-card');
+  cards.forEach((card, i) => {
+    gsap.to(card, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      delay: i * 0.18,
+      ease: 'power3.out',
     });
-    setTimeout(buildSignalChart, 600);
-  }
-});
-
-function buildSignalChart() {
-  const canvas = document.getElementById('signal-canvas');
-  if (!canvas) return;
-  const dpr = Math.min(window.devicePixelRatio, 2);
-  const W = canvas.offsetWidth || 600, H = 220;
-  canvas.width  = W * dpr; canvas.height = H * dpr;
-  canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  const pad = { t: 24, r: 24, b: 36, l: 56 };
-  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
-
-  // Simulated price data
-  const raw = [100,107,113,108,119,131,125,139,147,135,152,163,157,171,183,175,190,206,198,215,228,220,237,252,245,261,278,270,284,298];
-  const lo = Math.min(...raw) * .97, hi = Math.max(...raw) * 1.03;
-  const tx = i => pad.l + (i / (raw.length - 1)) * cw;
-  const ty = v => pad.t + ch - ((v - lo) / (hi - lo)) * ch;
-
-  // Grid
-  ctx.strokeStyle = 'rgba(0,0,0,0.05)'; ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.t + (ch / 4) * i;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
-  }
-
-  // Area fill
-  const grd = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
-  grd.addColorStop(0, 'rgba(201,168,76,.12)');
-  grd.addColorStop(1, 'rgba(201,168,76,.01)');
-  ctx.beginPath();
-  ctx.moveTo(tx(0), ty(raw[0]));
-  raw.forEach((v, i) => i > 0 && ctx.lineTo(tx(i), ty(v)));
-  ctx.lineTo(tx(raw.length - 1), pad.t + ch);
-  ctx.lineTo(tx(0), pad.t + ch);
-  ctx.closePath(); ctx.fillStyle = grd; ctx.fill();
-
-  // Price line
-  ctx.beginPath();
-  ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
-  raw.forEach((v, i) => i === 0 ? ctx.moveTo(tx(i), ty(v)) : ctx.lineTo(tx(i), ty(v)));
-  ctx.stroke();
-
-  // Signals
-  const sigs = [{i:3,t:'buy'},{i:7,t:'sell'},{i:10,t:'buy'},{i:15,t:'sell'},{i:18,t:'buy'},{i:22,t:'sell'},{i:25,t:'buy'},{i:28,t:'sell'}];
-  sigs.forEach(s => {
-    const x = tx(s.i), y = ty(raw[s.i]), buy = s.t === 'buy';
-    const oy = buy ? 16 : -16;
-    ctx.beginPath();
-    if (buy) { ctx.moveTo(x, y + oy); ctx.lineTo(x - 7, y + oy + 13); ctx.lineTo(x + 7, y + oy + 13); }
-    else      { ctx.moveTo(x, y + oy); ctx.lineTo(x - 7, y + oy - 13); ctx.lineTo(x + 7, y + oy - 13); }
-    ctx.closePath();
-    ctx.fillStyle = buy ? '#16A34A' : '#DC2626';
-    ctx.globalAlpha = .85; ctx.fill(); ctx.globalAlpha = 1;
-
-    // Point on line
-    ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#C9A84C';
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-    ctx.fill(); ctx.stroke();
-  });
-
-  // Y-axis labels
-  ctx.fillStyle = '#A8A8A8'; ctx.font = `11px DM Sans, sans-serif`; ctx.textAlign = 'right';
-  for (let i = 0; i <= 4; i++) {
-    const v = lo + ((hi - lo) / 4) * (4 - i);
-    ctx.fillText('$' + Math.round(v), pad.l - 8, pad.t + (ch / 4) * i + 4);
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   CONTACT
-═══════════════════════════════════════════════ */
-ScrollTrigger.create({
-  trigger: '#contact', start: 'top 78%', once: true,
-  onEnter() {
-    reveal('.contact-header',    { y: 20 });
-    reveal('.contact-form-wrap', { x: -24, y: 0, delay: .15 });
-    reveal('.contact-card',      { x:  24, y: 0, delay: .25 });
-  }
-});
-
-/* ═══════════════════════════════════════════════
-   COUNTER ANIMATIONS
-═══════════════════════════════════════════════ */
-function animateCounter(el) {
-  const target = parseFloat(el.dataset.target);
-  const suffix = el.dataset.suffix || '';
-  const dur = 1800, start = performance.now();
-  function tick(now) {
-    const p = Math.min((now - start) / dur, 1);
-    const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(target * ease).toLocaleString() + suffix;
-    if (p < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-function animateCounterTo(el, target, prefix, suffix, dur) {
-  const start = performance.now();
-  function tick(now) {
-    const p = Math.min((now - start) / dur, 1);
-    const ease = 1 - Math.pow(1 - p, 4);
-    el.textContent = prefix + Math.round(target * ease).toLocaleString() + suffix;
-    if (p < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-/* ═══════════════════════════════════════════════
-   LANGUAGE TOGGLE
-═══════════════════════════════════════════════ */
-let isHe = false;
-function toggleLang() {
-  isHe = !isHe;
-  document.documentElement.lang = isHe ? 'he' : 'en';
-  document.documentElement.dir  = isHe ? 'rtl' : 'ltr';
-  document.getElementById('langBtn').textContent = isHe ? 'English' : 'עברית';
-  document.querySelectorAll('[data-he]').forEach(el => {
-    const val = isHe ? el.dataset.he : el.dataset.en;
-    if (val) el.innerHTML = val;
   });
 }
 
-/* ═══════════════════════════════════════════════
+/* ────────────────────────────────────────────────────────
+   SLIDE 5 — PARTICLES
+──────────────────────────────────────────────────────── */
+let particlesCtx;
+let particles = [];
+
+(function initParticles() {
+  const canvas = document.getElementById('particles-canvas');
+  const wrapper = canvas.parentElement;
+  particlesCtx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = wrapper.offsetWidth;
+    canvas.height = wrapper.offsetHeight;
+  }
+  resize();
+  new ResizeObserver(resize).observe(wrapper);
+
+  for (let i = 0; i < 40; i++) {
+    particles.push({
+      x: Math.random(),
+      y: Math.random(),
+      r: Math.random() * 2.5 + 1,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      alpha: Math.random() * 0.5 + 0.2,
+    });
+  }
+
+  function draw() {
+    const w = canvas.width, h = canvas.height;
+    particlesCtx.clearRect(0, 0, w, h);
+    particles.forEach(p => {
+      p.x += p.vx / w;
+      p.y += p.vy / h;
+      if (p.x < 0) p.x = 1;
+      if (p.x > 1) p.x = 0;
+      if (p.y < 0) p.y = 1;
+      if (p.y > 1) p.y = 0;
+      particlesCtx.beginPath();
+      particlesCtx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
+      particlesCtx.fillStyle = `rgba(201,168,76,${p.alpha})`;
+      particlesCtx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ────────────────────────────────────────────────────────
    CONTACT FORM
-═══════════════════════════════════════════════ */
-function submitForm(e) {
+──────────────────────────────────────────────────────── */
+function handleSubmit(e) {
   e.preventDefault();
   const btn = e.target.querySelector('.btn-submit');
   const orig = btn.textContent;
-  btn.textContent = isHe ? '✓ נשלח!' : '✓ Message sent!';
-  btn.style.background = '#16A34A';
-  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; e.target.reset(); }, 3500);
-}
-
-/* ═══════════════════════════════════════════════
-   PWA
-═══════════════════════════════════════════════ */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  btn.textContent = currentLang === 'he' ? 'נשלח! ✓' : 'Sent! ✓';
+  btn.style.opacity = '0.7';
+  setTimeout(() => {
+    btn.textContent = orig;
+    btn.style.opacity = '';
+    e.target.reset();
+  }, 3000);
 }
 </script>
 </body>
