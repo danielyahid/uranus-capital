@@ -950,6 +950,15 @@ slides.forEach(s => slideObserver.observe(s));
     prev = close;
   }
 
+  /* ── FIXED Y-RANGE (all 120 candles, computed once) ── */
+  let globalLo = Infinity, globalHi = -Infinity;
+  candles.forEach(c => {
+    globalLo = Math.min(globalLo, c.low);
+    globalHi = Math.max(globalHi, c.high);
+  });
+  const rangePad = (globalHi - globalLo) * 0.08;
+  globalLo -= rangePad;
+  globalHi += rangePad;
 
   /* ── SIGNALS (STRONG only) ───────────────────────── */
   const signals = [
@@ -995,6 +1004,8 @@ slides.forEach(s => slideObserver.observe(s));
   let isPaused = false;
   let pauseTimer = null;
   let lastStepTime = 0;
+  let pauseIconAlpha = 0;     // fades from 1→0 after user clicks pause
+  let pauseIconTimer = null;
 
   const PAD = { top: 24, right: 12, bottom: 32, left: 52 };
 
@@ -1026,19 +1037,11 @@ slides.forEach(s => slideObserver.observe(s));
     cx.fillStyle = BG;
     cx.fillRect(0, 0, W, H);
 
-    // dynamic Y range from visible window — at least 2 candles to avoid zero range
-    const rangeEnd = Math.max(winEnd, winStart + 2);
-    let lo = Infinity, hi = -Infinity;
-    for (let i = winStart; i < Math.min(rangeEnd, TOTAL); i++) {
-      lo = Math.min(lo, candles[i].low);
-      hi = Math.max(hi, candles[i].high);
-    }
-    if (hi - lo < 100) lo = hi - 1000; // guard against near-zero range
-    const rp = (hi - lo) * 0.08;
-    lo -= rp; hi += rp;
+    // fixed price range — computed once from all 120 candles
+    const lo = globalLo, hi = globalHi;
     const py = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
 
-    // sliding window: always 40 slots wide
+    // sliding window: always WINDOW slots wide
     const winEnd   = Math.min(visibleCandles, TOTAL);
     const winStart = Math.max(0, winEnd - WINDOW);
     const slotW    = cw / WINDOW;
@@ -1141,6 +1144,18 @@ slides.forEach(s => slideObserver.observe(s));
       cx.fillText(sig.label, 0, by + bh / 2);
       cx.restore();
     });
+
+    /* PAUSE ICON — fades out after 1 s */
+    if (pauseIconAlpha > 0) {
+      cx.save();
+      cx.globalAlpha = pauseIconAlpha;
+      cx.fillStyle = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.45)';
+      cx.font = 'bold 28px sans-serif';
+      cx.textAlign = 'center';
+      cx.textBaseline = 'middle';
+      cx.fillText('▐▐', W / 2, H / 2);
+      cx.restore();
+    }
   }
 
   /* ── ANIMATION LOOP ──────────────────────────────── */
@@ -1181,6 +1196,10 @@ slides.forEach(s => slideObserver.observe(s));
         needDraw = true;
       }
     });
+    if (pauseIconAlpha > 0) {
+      pauseIconAlpha = Math.max(0, pauseIconAlpha - 0.025);
+      needDraw = true;
+    }
     if (needDraw) draw();
 
     requestAnimationFrame(loop);
@@ -1198,6 +1217,18 @@ slides.forEach(s => slideObserver.observe(s));
   slider.addEventListener('change', () => {
     clearTimeout(pauseTimer);
     pauseTimer = setTimeout(() => { isPaused = false; }, 2000);
+  });
+
+  /* ── CLICK TO PAUSE / RESUME ─────────────────────── */
+  canvas.addEventListener('click', () => {
+    clearTimeout(pauseTimer);
+    isPaused = !isPaused;
+    if (isPaused) {
+      pauseIconAlpha = 1;
+    } else {
+      lastStepTime = performance.now();
+      pauseIconAlpha = 1;
+    }
   });
 
   /* ── INIT ────────────────────────────────────────── */
