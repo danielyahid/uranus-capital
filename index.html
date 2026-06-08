@@ -1002,22 +1002,14 @@ slides.forEach(s => slideObserver.observe(s));
     { idx: 119, label: 'Apr'    },
   ];
 
-  /* ── TREND ZONES ─────────────────────────────────── */
-  const trendZones = [
-    { from: 0,  to: 18,  bull: true,  label: 'Bullish Trend'  },
-    { from: 18, to: 35,  bull: false, label: 'Bearish Trend'  },
-    { from: 35, to: 55,  bull: true,  label: 'Bullish Trend'  },
-    { from: 55, to: 72,  bull: false, label: 'Bearish Trend'  },
-    { from: 72, to: 96,  bull: true,  label: 'Bullish Trend'  },
-    { from: 96, to: 120, bull: false, label: 'Bearish Trend'  },
-  ];
-
   /* ── CANVAS SETUP ────────────────────────────────── */
   const canvas = document.getElementById('btc-canvas');
   const cx = canvas.getContext('2d');
   const slider = document.getElementById('btc-slider');
 
+  const WINDOW = 40;    // candles shown at once
   let visibleCandles = 1;
+  let candleProg = 1;   // build progress of the newest candle (0→1 over 100 ms)
   let animFrames = {};  // signal index → 0..1 pop progress
   let isPaused = false;
   let pauseTimer = null;
@@ -1041,25 +1033,28 @@ slides.forEach(s => slideObserver.observe(s));
     const W = canvas.width, H = canvas.height;
     const cw = W - PAD.left - PAD.right;
     const ch = H - PAD.top - PAD.bottom;
-    const vis = Math.max(2, Math.min(visibleCandles, TOTAL));
 
     const isDark = document.body.classList.contains('dark');
-    const BG       = isDark ? '#1A1A1A' : '#FFFFFF';
-    const GRID     = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-    const LABEL_C  = isDark ? '#8A8680' : '#5A5A5A';
-    const BULL     = '#26a69a';
-    const BEAR     = '#ef5350';
+    const BG      = isDark ? '#1A1A1A' : '#FFFFFF';
+    const GRID    = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const LABEL_C = isDark ? '#8A8680' : '#5A5A5A';
+    const BULL    = '#26a69a';
+    const BEAR    = '#ef5350';
 
     cx.clearRect(0, 0, W, H);
     cx.fillStyle = BG;
     cx.fillRect(0, 0, W, H);
 
-    // fixed price range — computed once from all 120 candles so scale never changes
+    // fixed price range — never changes
     const lo = globalLo, hi = globalHi;
-
     const py = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
-    const cx_ = i => PAD.left + (i + 0.5) * (cw / vis);
-    const cw_ = Math.max(1, (cw / vis) * 0.55);
+
+    // sliding window: always 40 slots wide
+    const winEnd   = Math.min(visibleCandles, TOTAL);
+    const winStart = Math.max(0, winEnd - WINDOW);
+    const slotW    = cw / WINDOW;
+    const cx_      = i => PAD.left + (i - winStart + 0.5) * slotW;
+    const cw_      = Math.max(1, slotW * 0.55);
 
     /* Y-AXIS */
     const yTicks = [40000, 60000, 80000, 100000, 120000];
@@ -1076,68 +1071,65 @@ slides.forEach(s => slideObserver.observe(s));
     });
     cx.restore();
 
-    /* X-AXIS */
+    /* X-AXIS — only labels inside the current window */
     cx.save();
     cx.fillStyle = LABEL_C;
     cx.font = '10px Roboto,sans-serif';
     cx.textAlign = 'center'; cx.textBaseline = 'top';
     xLabels.forEach(({ idx, label }) => {
-      if (idx >= vis) return;
+      if (idx < winStart || idx >= winEnd) return;
       cx.fillText(label, cx_(idx), H - PAD.bottom + 4);
     });
     cx.restore();
 
-    /* TREND ZONES */
-    trendZones.forEach(z => {
-      if (z.from >= vis) return;
-      const x1 = PAD.left + (z.from / TOTAL) * cw;
-      const x2 = PAD.left + (Math.min(z.to, vis) / TOTAL) * cw;
-      if (x2 <= x1) return;
-      cx.save();
-      cx.fillStyle = z.bull ? 'rgba(38,166,154,0.07)' : 'rgba(239,83,80,0.07)';
-      cx.fillRect(x1, PAD.top, x2 - x1, ch);
-      cx.fillStyle = z.bull ? '#26a69a' : '#ef5350';
-      cx.font = 'bold 9px Roboto,sans-serif';
-      cx.textAlign = 'center'; cx.textBaseline = 'top';
-      cx.fillText(z.label, x1 + (x2 - x1) / 2, PAD.top + 4);
-      cx.restore();
-    });
-
     /* CANDLES */
-    for (let i = 0; i < vis; i++) {
+    for (let i = winStart; i < winEnd; i++) {
       const c = candles[i];
       const bull = c.close >= c.open;
-      const col = bull ? BULL : BEAR;
-      const x = cx_(i);
+      const col  = bull ? BULL : BEAR;
+      const x    = cx_(i);
+      const isNewest = i === winEnd - 1;
+      const prog     = isNewest ? candleProg : 1;
+
+      // wick draws top→bottom; completes in first 40% of candleProg
+      const wickProg  = Math.min(1, prog / 0.4);
+      const wickBottom = py(c.high) + (py(c.low) - py(c.high)) * wickProg;
       cx.save();
       cx.strokeStyle = col; cx.lineWidth = 1;
-      cx.beginPath(); cx.moveTo(x, py(c.high)); cx.lineTo(x, py(c.low)); cx.stroke();
-      const bTop = py(Math.max(c.open, c.close));
-      const bH   = Math.max(1, py(Math.min(c.open, c.close)) - bTop);
-      cx.fillStyle = col;
-      cx.fillRect(x - cw_ / 2, bTop, cw_, bH);
+      cx.beginPath(); cx.moveTo(x, py(c.high)); cx.lineTo(x, wickBottom); cx.stroke();
+
+      // body grows from open toward close; starts at 40% of candleProg
+      const bodyProg = Math.max(0, (prog - 0.4) / 0.6);
+      const pyO = py(c.open);
+      const pyC = py(c.close);
+      if (bull) {
+        const h = Math.max(1, (pyO - pyC) * bodyProg);
+        cx.fillStyle = col;
+        cx.fillRect(x - cw_ / 2, pyO - h, cw_, h);
+      } else {
+        const h = Math.max(1, (pyC - pyO) * bodyProg);
+        cx.fillStyle = col;
+        cx.fillRect(x - cw_ / 2, pyO, cw_, h);
+      }
       cx.restore();
     }
 
-    /* SIGNALS */
+    /* SIGNALS — only those inside the current window */
     signals.forEach(sig => {
-      if (sig.index >= vis) return;
+      if (sig.index < winStart || sig.index >= winEnd) return;
       const prog = animFrames[sig.index] !== undefined ? animFrames[sig.index] : 1;
       if (prog <= 0) return;
-      const isBuy    = sig.type.includes('BUY');
-      const isStrong = sig.type.startsWith('STRONG');
-      const c = candles[sig.index];
-      const x = cx_(sig.index);
-      const col = isBuy ? BULL : BEAR;
-      const scale = 0.55 + prog * 0.45;
-      const tri = isStrong ? 7 : 5;
+      const isBuy = sig.type.includes('BUY');
+      const c     = candles[sig.index];
+      const x     = cx_(sig.index);
+      const col   = isBuy ? BULL : BEAR;
+      const tri   = 7;
 
       cx.save();
       cx.globalAlpha = prog;
       cx.translate(x, isBuy ? py(c.low) - 14 : py(c.high) + 14);
-      cx.scale(scale, scale);
+      cx.scale(0.55 + prog * 0.45, 0.55 + prog * 0.45);
 
-      // triangle ▲ / ▼
       cx.beginPath();
       if (isBuy) {
         cx.moveTo(0, -tri); cx.lineTo(tri, tri); cx.lineTo(-tri, tri);
@@ -1147,18 +1139,13 @@ slides.forEach(s => slideObserver.observe(s));
       cx.closePath();
       cx.fillStyle = col; cx.fill();
 
-      // label pill
-      cx.font = (isStrong ? 'bold ' : '') + '9px Roboto,sans-serif';
+      cx.font = 'bold 9px Roboto,sans-serif';
       const tw = cx.measureText(sig.label).width;
-      const bw = tw + 8, bh = isStrong ? 15 : 13;
+      const bw = tw + 8, bh = 15;
       const by = isBuy ? tri + 2 : -(tri + 2 + bh);
       cx.fillStyle = col;
       cx.beginPath();
-      if (cx.roundRect) {
-        cx.roundRect(-bw / 2, by, bw, bh, 3);
-      } else {
-        cx.rect(-bw / 2, by, bw, bh);
-      }
+      if (cx.roundRect) { cx.roundRect(-bw / 2, by, bw, bh, 3); } else { cx.rect(-bw / 2, by, bw, bh); }
       cx.fill();
       cx.fillStyle = '#fff';
       cx.textAlign = 'center'; cx.textBaseline = 'middle';
@@ -1169,30 +1156,35 @@ slides.forEach(s => slideObserver.observe(s));
 
   /* ── ANIMATION LOOP ──────────────────────────────── */
   function loop(ts) {
-    // auto-advance every 80 ms
-    if (!isPaused && ts - lastStepTime > 80) {
-      lastStepTime = ts;
-      if (visibleCandles < TOTAL) {
-        visibleCandles++;
-        slider.value = Math.round(visibleCandles / TOTAL * 100);
-        // kick off pop animation for any signal that just appeared
-        signals.forEach(s => {
-          if (s.index === visibleCandles - 1) animFrames[s.index] = 0;
-        });
-      } else {
-        // reached end — pause 3s then restart
-        isPaused = true;
-        clearTimeout(pauseTimer);
-        pauseTimer = setTimeout(() => {
-          visibleCandles = 1;
-          animFrames = {};
-          slider.value = 0;
-          isPaused = false;
-        }, 3000);
+    if (!isPaused) {
+      const elapsed = ts - lastStepTime;
+      // candleProg: newest candle builds over 100 ms
+      candleProg = Math.min(1, elapsed / 100);
+
+      if (elapsed >= 150) {
+        if (visibleCandles < TOTAL) {
+          visibleCandles++;
+          lastStepTime = ts;
+          slider.value = Math.round(visibleCandles / TOTAL * 100);
+          signals.forEach(s => {
+            if (s.index === visibleCandles - 1) animFrames[s.index] = 0;
+          });
+        } else {
+          // reached end — pause 3 s then restart from candle 1
+          isPaused = true;
+          clearTimeout(pauseTimer);
+          pauseTimer = setTimeout(() => {
+            visibleCandles = 1;
+            candleProg = 1;
+            animFrames = {};
+            slider.value = 0;
+            isPaused = false;
+            lastStepTime = performance.now();
+          }, 3000);
+        }
       }
     }
 
-    // advance signal pop animations
     let needDraw = !isPaused;
     Object.keys(animFrames).forEach(k => {
       if (animFrames[k] < 1) {
@@ -1209,8 +1201,8 @@ slides.forEach(s => slideObserver.observe(s));
   slider.addEventListener('input', () => {
     isPaused = true;
     clearTimeout(pauseTimer);
-    visibleCandles = Math.max(2, Math.floor(+slider.value / 100 * TOTAL));
-    // fully show all signals already past
+    visibleCandles = Math.max(1, Math.floor(+slider.value / 100 * TOTAL));
+    candleProg = 1; // scrubbing shows all candles fully built
     signals.forEach(s => { if (s.index < visibleCandles) animFrames[s.index] = 1; });
     draw();
   });
