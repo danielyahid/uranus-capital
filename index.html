@@ -1026,12 +1026,14 @@ slides.forEach(s => slideObserver.observe(s));
     cx.fillStyle = BG;
     cx.fillRect(0, 0, W, H);
 
-    // dynamic Y range from visible window only — fills chart height like TradingView
+    // dynamic Y range from visible window — at least 2 candles to avoid zero range
+    const rangeEnd = Math.max(winEnd, winStart + 2);
     let lo = Infinity, hi = -Infinity;
-    for (let i = winStart; i < winEnd; i++) {
+    for (let i = winStart; i < Math.min(rangeEnd, TOTAL); i++) {
       lo = Math.min(lo, candles[i].low);
       hi = Math.max(hi, candles[i].high);
     }
+    if (hi - lo < 100) lo = hi - 1000; // guard against near-zero range
     const rp = (hi - lo) * 0.08;
     lo -= rp; hi += rp;
     const py = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
