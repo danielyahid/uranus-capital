@@ -200,7 +200,11 @@ body.lang-en #dot-nav {
   height: 280px;
   flex-shrink: 0;
   display: block;
+  cursor: grab;
+  touch-action: none;   /* hand all touch events to JS; prevents scroll from eating them */
+  user-select: none;
 }
+#three-canvas:active { cursor: grabbing; }
 .hero-headline {
   font-family: 'Playfair Display', serif;
   font-size: clamp(26px, 4vw, 46px);
@@ -874,6 +878,7 @@ slides.forEach(s => slideObserver.observe(s));
   }
 
   canvas.addEventListener('mousedown', e => {
+    e.preventDefault();
     isDragging = true;
     prevX = e.clientX; prevY = e.clientY;
     resetAutoTimer();
@@ -897,6 +902,7 @@ slides.forEach(s => slideObserver.observe(s));
   }, { passive: true });
   canvas.addEventListener('touchmove', e => {
     if (!isDragging) return;
+    e.preventDefault();   /* stop scroll-snap container from stealing the gesture */
     const dx = e.touches[0].clientX - prevX;
     const dy = e.touches[0].clientY - prevY;
     velX = dx * 0.008;
@@ -904,7 +910,7 @@ slides.forEach(s => slideObserver.observe(s));
     sphere.rotation.y += velX;
     sphere.rotation.x += velY;
     prevX = e.touches[0].clientX; prevY = e.touches[0].clientY;
-  }, { passive: true });
+  }, { passive: false });
   canvas.addEventListener('touchend', () => { isDragging = false; });
 
   function animate() {
