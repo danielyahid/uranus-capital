@@ -250,40 +250,47 @@ body.lang-en #dot-nav {
 }
 
 /* ── SLIDE 2 — INDICATOR ──────────────────────────────── */
-#slide-2 .slide-inner { background: var(--surface); }
+#slide-2 .slide-inner { background: var(--surface); padding: 20px 24px; }
 .slide-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(20px, 3vw, 32px);
+  font-size: clamp(18px, 2.8vw, 28px);
   font-weight: 700;
   color: var(--text);
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
 }
-.chart-wrap {
+.slide-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0 0 10px;
+}
+.s2-chart-wrap {
   width: 100%;
-  height: 260px;
+  height: 240px;
   flex-shrink: 0;
   position: relative;
 }
-.stat-pills {
+.s2-chart-wrap canvas { display: block; }
+#btc-slider { width: 100%; accent-color: var(--gold); cursor: pointer; }
+.s2-slider-wrap { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+.s2-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.s2-stats {
   display: flex;
-  gap: 12px;
-  margin-top: 20px;
-  flex-wrap: wrap;
+  gap: 10px;
   justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
 }
 .stat-pill {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 100px;
-  padding: 8px 18px;
-  font-size: 13px;
+  padding: 6px 16px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
   transition: var(--transition);
-}
-.stat-pill span {
-  color: var(--gold);
 }
 
 /* ── SLIDE 3 — PERFORMANCE ───────────────────────────── */
@@ -570,14 +577,22 @@ body.lang-en #dot-nav {
   <!-- SLIDE 2 — INDICATOR -->
   <section class="slide" id="slide-2">
     <div class="slide-inner">
-      <h2 class="slide-title txt-indicator-title">האינדיקטור הקנייני שלנו</h2>
-      <div class="chart-wrap">
-        <canvas id="btc-chart" width="800" height="260"></canvas>
+      <div class="s2-header">
+        <h2 class="slide-title" data-he="האינדיקטור הקנייני שלנו" data-en="Our Proprietary Indicator"></h2>
+        <p class="slide-sub" data-he="גרף ביטקוין אמיתי עם האיתותים שלנו — 2024 עד היום" data-en="Real Bitcoin chart with our signals — 2024 to present"></p>
       </div>
-      <div class="stat-pills">
-        <div class="stat-pill"><span class="txt-stat-wr">שיעור ניצחון</span> <span>78%</span></div>
-        <div class="stat-pill"><span class="txt-stat-sig">איתותים</span> <span>200+</span></div>
-        <div class="stat-pill"><span class="txt-stat-acc">דיוק</span> <span>85%</span></div>
+      <div class="s2-chart-wrap">
+        <canvas id="btc-canvas"></canvas>
+      </div>
+      <div class="s2-slider-wrap">
+        <span class="s2-label">Jan 2024</span>
+        <input type="range" id="btc-slider" min="0" max="100" value="0">
+        <span class="s2-label">Apr 2026</span>
+      </div>
+      <div class="s2-stats">
+        <div class="stat-pill" data-he="אחוז דיוק 78%" data-en="Win Rate 78%"></div>
+        <div class="stat-pill" data-he="+200 איתותים" data-en="200+ Signals"></div>
+        <div class="stat-pill" data-he="דיוק 85%" data-en="Accuracy 85%"></div>
       </div>
     </div>
   </section>
@@ -811,7 +826,7 @@ function applyLang(lang) {
     document.getElementById('btn-en').classList.add('active');
     document.getElementById('btn-he').classList.remove('active');
   }
-  // translate text nodes
+  // translate class-named nodes
   const map = T[lang];
   for (const cls in map) {
     document.querySelectorAll('.' + cls).forEach(el => {
@@ -822,17 +837,9 @@ function applyLang(lang) {
       }
     });
   }
-  // stat pills: rebuild their content
-  const statPills = document.querySelectorAll('.stat-pill');
-  const stats = [
-    { key: 'txt-stat-wr', val: '78%' },
-    { key: 'txt-stat-sig', val: '200+' },
-    { key: 'txt-stat-acc', val: '85%' },
-  ];
-  statPills.forEach((p, i) => {
-    if (stats[i]) {
-      p.innerHTML = `<span class="${stats[i].key}">${map[stats[i].key]}</span> <span>${stats[i].val}</span>`;
-    }
+  // translate data-he / data-en nodes
+  document.querySelectorAll('[data-he][data-en]').forEach(el => {
+    el.textContent = el.getAttribute('data-' + lang) || '';
   });
 }
 
@@ -897,132 +904,329 @@ const slideObserver = new IntersectionObserver((entries) => {
 slides.forEach(s => slideObserver.observe(s));
 
 /* ────────────────────────────────────────────────────────
-   SLIDE 2 — BTC CHART
+   SLIDE 2 — BTC CANDLESTICK CHART (pure Canvas 2D)
 ──────────────────────────────────────────────────────── */
-(function initChart() {
-  const ctx = document.getElementById('btc-chart').getContext('2d');
+(function initBtcChart() {
 
-  const labels = ['Dec','Jan','Feb','Mar','Apr','May','Jun'];
-  const prices = [42000, 52000, 68000, 88000, 74000, 94000, 107000];
+  /* ── PRICE PATH ─────────────────────────────────── */
+  const waypoints = [
+    { p: 0,    v: 42000  },
+    { p: 0.17, v: 68000  },
+    { p: 0.25, v: 58000  },
+    { p: 0.38, v: 58000  },
+    { p: 0.50, v: 108000 },
+    { p: 0.60, v: 78000  },
+    { p: 0.68, v: 98000  },
+    { p: 0.76, v: 82000  },
+    { p: 0.83, v: 112000 },
+    { p: 0.88, v: 78000  },
+    { p: 0.92, v: 95000  },
+    { p: 0.96, v: 75000  },
+    { p: 0.98, v: 85000  },
+    { p: 1.00, v: 63000  },
+  ];
 
-  // buy/sell signal indices
-  const buyIdx = [0, 2, 4];
-  const sellIdx = [1, 3, 5];
-
-  const buyData = prices.map((v, i) => buyIdx.includes(i) ? v : null);
-  const sellData = prices.map((v, i) => sellIdx.includes(i) ? v : null);
-
-  const gradientFill = ctx.createLinearGradient(0, 0, 0, 280);
-  gradientFill.addColorStop(0, 'rgba(201,168,76,0.25)');
-  gradientFill.addColorStop(1, 'rgba(201,168,76,0)');
-
-  const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'BTC',
-          data: prices,
-          borderColor: '#C9A84C',
-          borderWidth: 2.5,
-          fill: true,
-          backgroundColor: gradientFill,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        },
-        {
-          label: 'Buy',
-          data: buyData,
-          type: 'scatter',
-          pointStyle: 'triangle',
-          pointRadius: 8,
-          pointBackgroundColor: '#22c55e',
-          borderColor: '#22c55e',
-          borderWidth: 0,
-          showLine: false,
-        },
-        {
-          label: 'Sell',
-          data: sellData,
-          type: 'scatter',
-          pointStyle: ctx => {
-            // flipped triangle for sell — use rotation
-            return 'triangle';
-          },
-          rotation: 180,
-          pointRadius: 8,
-          pointBackgroundColor: '#ef4444',
-          borderColor: '#ef4444',
-          borderWidth: 0,
-          showLine: false,
-        },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {
-        duration: 1800,
-        easing: 'easeInOutQuart',
-      },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(26,26,26,0.9)',
-          titleColor: '#C9A84C',
-          bodyColor: '#F0EDE8',
-          padding: 10,
-          callbacks: {
-            label: ctx => ctx.dataset.label === 'BTC'
-              ? '$' + ctx.parsed.y.toLocaleString()
-              : ctx.dataset.label,
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { color: 'rgba(128,128,128,0.08)' },
-          ticks: { color: '#8A8680', font: { size: 11 } },
-          border: { display: false },
-        },
-        y: {
-          grid: { color: 'rgba(128,128,128,0.08)' },
-          ticks: {
-            color: '#8A8680',
-            font: { size: 11 },
-            callback: v => '$' + (v/1000).toFixed(0) + 'k',
-          },
-          border: { display: false },
-        }
+  function interpPrice(t) {
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const a = waypoints[i], b = waypoints[i + 1];
+      if (t >= a.p && t <= b.p) {
+        const u = (t - a.p) / (b.p - a.p);
+        const s = u * u * (3 - 2 * u); // smoothstep
+        return a.v + (b.v - a.v) * s;
       }
     }
+    return waypoints[waypoints.length - 1].v;
+  }
+
+  /* ── CANDLE GENERATION (seeded random for reproducibility) ── */
+  const TOTAL = 120;
+  let seed = 9876;
+  function rnd() {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0xFFFFFFFF;
+  }
+
+  const candles = [];
+  let prev = 42000;
+  for (let i = 0; i < TOTAL; i++) {
+    const t = i / (TOTAL - 1);
+    const target = interpPrice(t);
+    const close = Math.max(20000, target + (rnd() - 0.5) * 0.05 * target);
+    const open = prev;
+    const swing = close * (0.018 + rnd() * 0.022);
+    const high = Math.max(open, close) + swing * (0.4 + rnd() * 0.6);
+    const low  = Math.min(open, close) - swing * (0.4 + rnd() * 0.6);
+    candles.push({ open, high, low, close });
+    prev = close;
+  }
+
+  /* ── SIGNALS ─────────────────────────────────────── */
+  const signals = [
+    { index: 5,   type: 'STRONG_BUY',  label: 'Strong BUY'  },
+    { index: 18,  type: 'STRONG_SELL', label: 'Strong SELL' },
+    { index: 28,  type: 'BUY',         label: 'BUY'         },
+    { index: 35,  type: 'BUY',         label: 'BUY'         },
+    { index: 48,  type: 'STRONG_SELL', label: 'Strong SELL' },
+    { index: 52,  type: 'SELL',        label: 'SELL'        },
+    { index: 58,  type: 'STRONG_BUY',  label: 'Strong BUY'  },
+    { index: 62,  type: 'BUY',         label: 'BUY'         },
+    { index: 72,  type: 'STRONG_SELL', label: 'Strong SELL' },
+    { index: 82,  type: 'STRONG_BUY',  label: 'Strong BUY'  },
+    { index: 88,  type: 'BUY',         label: 'BUY'         },
+    { index: 95,  type: 'STRONG_SELL', label: 'Strong SELL' },
+    { index: 100, type: 'STRONG_SELL', label: 'Strong SELL' },
+    { index: 108, type: 'BUY',         label: 'BUY'         },
+    { index: 112, type: 'BUY',         label: 'BUY'         },
+    { index: 118, type: 'STRONG_BUY',  label: 'Forecast BUY'},
+  ];
+
+  /* ── X-AXIS LABELS ───────────────────────────────── */
+  const xLabels = [
+    { idx: 0,   label: 'Jan 24' },
+    { idx: 9,   label: 'Mar'    },
+    { idx: 18,  label: 'May'    },
+    { idx: 27,  label: 'Jul'    },
+    { idx: 36,  label: 'Sep'    },
+    { idx: 44,  label: 'Nov'    },
+    { idx: 53,  label: 'Jan 25' },
+    { idx: 62,  label: 'Mar'    },
+    { idx: 71,  label: 'May'    },
+    { idx: 80,  label: 'Jul'    },
+    { idx: 89,  label: 'Sep'    },
+    { idx: 98,  label: 'Nov'    },
+    { idx: 107, label: 'Jan 26' },
+    { idx: 116, label: 'Mar'    },
+    { idx: 119, label: 'Apr'    },
+  ];
+
+  /* ── TREND ZONES ─────────────────────────────────── */
+  const trendZones = [
+    { from: 0,  to: 18,  bull: true,  label: 'Bullish Trend'  },
+    { from: 18, to: 35,  bull: false, label: 'Bearish Trend'  },
+    { from: 35, to: 55,  bull: true,  label: 'Bullish Trend'  },
+    { from: 55, to: 72,  bull: false, label: 'Bearish Trend'  },
+    { from: 72, to: 96,  bull: true,  label: 'Bullish Trend'  },
+    { from: 96, to: 120, bull: false, label: 'Bearish Trend'  },
+  ];
+
+  /* ── CANVAS SETUP ────────────────────────────────── */
+  const canvas = document.getElementById('btc-canvas');
+  const cx = canvas.getContext('2d');
+  const slider = document.getElementById('btc-slider');
+
+  let visibleCandles = 1;
+  let animFrames = {};  // signal index → 0..1 pop progress
+  let isPaused = false;
+  let pauseTimer = null;
+  let lastStepTime = 0;
+
+  const PAD = { top: 24, right: 12, bottom: 32, left: 52 };
+
+  function resize() {
+    const wrap = canvas.parentElement;
+    const w = wrap.clientWidth || 600;
+    const h = wrap.clientHeight || 240;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    draw();
+  }
+
+  /* ── DRAW ────────────────────────────────────────── */
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const cw = W - PAD.left - PAD.right;
+    const ch = H - PAD.top - PAD.bottom;
+    const vis = Math.max(2, Math.min(visibleCandles, TOTAL));
+
+    const isDark = document.body.classList.contains('dark');
+    const BG       = isDark ? '#1A1A1A' : '#FFFFFF';
+    const GRID     = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const LABEL_C  = isDark ? '#8A8680' : '#5A5A5A';
+    const BULL     = '#26a69a';
+    const BEAR     = '#ef5350';
+
+    cx.clearRect(0, 0, W, H);
+    cx.fillStyle = BG;
+    cx.fillRect(0, 0, W, H);
+
+    // price range
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < vis; i++) {
+      lo = Math.min(lo, candles[i].low);
+      hi = Math.max(hi, candles[i].high);
+    }
+    const pad = (hi - lo) * 0.14;
+    lo -= pad; hi += pad;
+
+    const py = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
+    const cx_ = i => PAD.left + (i + 0.5) * (cw / vis);
+    const cw_ = Math.max(1, (cw / vis) * 0.55);
+
+    /* Y-AXIS */
+    const yTicks = [40000, 60000, 80000, 100000, 120000];
+    cx.save();
+    cx.strokeStyle = GRID; cx.lineWidth = 1;
+    cx.fillStyle = LABEL_C;
+    cx.font = '10px Roboto,sans-serif';
+    cx.textAlign = 'right'; cx.textBaseline = 'middle';
+    yTicks.forEach(p => {
+      if (p < lo || p > hi) return;
+      const y = py(p);
+      cx.beginPath(); cx.moveTo(PAD.left, y); cx.lineTo(W - PAD.right, y); cx.stroke();
+      cx.fillText('$' + (p / 1000).toFixed(0) + 'k', PAD.left - 4, y);
+    });
+    cx.restore();
+
+    /* X-AXIS */
+    cx.save();
+    cx.fillStyle = LABEL_C;
+    cx.font = '10px Roboto,sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'top';
+    xLabels.forEach(({ idx, label }) => {
+      if (idx >= vis) return;
+      cx.fillText(label, cx_(idx), H - PAD.bottom + 4);
+    });
+    cx.restore();
+
+    /* TREND ZONES */
+    trendZones.forEach(z => {
+      if (z.from >= vis) return;
+      const x1 = PAD.left + (z.from / TOTAL) * cw;
+      const x2 = PAD.left + (Math.min(z.to, vis) / TOTAL) * cw;
+      if (x2 <= x1) return;
+      cx.save();
+      cx.fillStyle = z.bull ? 'rgba(38,166,154,0.07)' : 'rgba(239,83,80,0.07)';
+      cx.fillRect(x1, PAD.top, x2 - x1, ch);
+      cx.fillStyle = z.bull ? '#26a69a' : '#ef5350';
+      cx.font = 'bold 9px Roboto,sans-serif';
+      cx.textAlign = 'center'; cx.textBaseline = 'top';
+      cx.fillText(z.label, x1 + (x2 - x1) / 2, PAD.top + 4);
+      cx.restore();
+    });
+
+    /* CANDLES */
+    for (let i = 0; i < vis; i++) {
+      const c = candles[i];
+      const bull = c.close >= c.open;
+      const col = bull ? BULL : BEAR;
+      const x = cx_(i);
+      cx.save();
+      cx.strokeStyle = col; cx.lineWidth = 1;
+      cx.beginPath(); cx.moveTo(x, py(c.high)); cx.lineTo(x, py(c.low)); cx.stroke();
+      const bTop = py(Math.max(c.open, c.close));
+      const bH   = Math.max(1, py(Math.min(c.open, c.close)) - bTop);
+      cx.fillStyle = col;
+      cx.fillRect(x - cw_ / 2, bTop, cw_, bH);
+      cx.restore();
+    }
+
+    /* SIGNALS */
+    signals.forEach(sig => {
+      if (sig.index >= vis) return;
+      const prog = animFrames[sig.index] !== undefined ? animFrames[sig.index] : 1;
+      if (prog <= 0) return;
+      const isBuy    = sig.type.includes('BUY');
+      const isStrong = sig.type.startsWith('STRONG');
+      const c = candles[sig.index];
+      const x = cx_(sig.index);
+      const col = isBuy ? BULL : BEAR;
+      const scale = 0.55 + prog * 0.45;
+      const tri = isStrong ? 7 : 5;
+
+      cx.save();
+      cx.globalAlpha = prog;
+      cx.translate(x, isBuy ? py(c.low) - 14 : py(c.high) + 14);
+      cx.scale(scale, scale);
+
+      // triangle ▲ / ▼
+      cx.beginPath();
+      if (isBuy) {
+        cx.moveTo(0, -tri); cx.lineTo(tri, tri); cx.lineTo(-tri, tri);
+      } else {
+        cx.moveTo(0, tri); cx.lineTo(tri, -tri); cx.lineTo(-tri, -tri);
+      }
+      cx.closePath();
+      cx.fillStyle = col; cx.fill();
+
+      // label pill
+      cx.font = (isStrong ? 'bold ' : '') + '9px Roboto,sans-serif';
+      const tw = cx.measureText(sig.label).width;
+      const bw = tw + 8, bh = isStrong ? 15 : 13;
+      const by = isBuy ? tri + 2 : -(tri + 2 + bh);
+      cx.fillStyle = col;
+      cx.beginPath();
+      if (cx.roundRect) {
+        cx.roundRect(-bw / 2, by, bw, bh, 3);
+      } else {
+        cx.rect(-bw / 2, by, bw, bh);
+      }
+      cx.fill();
+      cx.fillStyle = '#fff';
+      cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      cx.fillText(sig.label, 0, by + bh / 2);
+      cx.restore();
+    });
+  }
+
+  /* ── ANIMATION LOOP ──────────────────────────────── */
+  function loop(ts) {
+    // auto-advance every 80 ms
+    if (!isPaused && ts - lastStepTime > 80) {
+      lastStepTime = ts;
+      if (visibleCandles < TOTAL) {
+        visibleCandles++;
+        slider.value = Math.round(visibleCandles / TOTAL * 100);
+        // kick off pop animation for any signal that just appeared
+        signals.forEach(s => {
+          if (s.index === visibleCandles - 1) animFrames[s.index] = 0;
+        });
+      } else {
+        // reached end — pause 3s then restart
+        isPaused = true;
+        clearTimeout(pauseTimer);
+        pauseTimer = setTimeout(() => {
+          visibleCandles = 1;
+          animFrames = {};
+          slider.value = 0;
+          isPaused = false;
+        }, 3000);
+      }
+    }
+
+    // advance signal pop animations
+    let needDraw = !isPaused;
+    Object.keys(animFrames).forEach(k => {
+      if (animFrames[k] < 1) {
+        animFrames[k] = Math.min(1, animFrames[k] + 0.07);
+        needDraw = true;
+      }
+    });
+    if (needDraw) draw();
+
+    requestAnimationFrame(loop);
+  }
+
+  /* ── SLIDER ──────────────────────────────────────── */
+  slider.addEventListener('input', () => {
+    isPaused = true;
+    clearTimeout(pauseTimer);
+    visibleCandles = Math.max(2, Math.floor(+slider.value / 100 * TOTAL));
+    // fully show all signals already past
+    signals.forEach(s => { if (s.index < visibleCandles) animFrames[s.index] = 1; });
+    draw();
+  });
+  slider.addEventListener('change', () => {
+    clearTimeout(pauseTimer);
+    pauseTimer = setTimeout(() => { isPaused = false; }, 2000);
   });
 
-  // loop: redraw every 4s
-  let loopTimer;
-  function loopChart() {
-    clearTimeout(loopTimer);
-    chart.destroy();
-    loopTimer = setTimeout(() => {
-      initChart();
-    }, 4000);
-  }
-  // trigger re-animate on loop by updating data
-  function reAnimate() {
-    chart.data.datasets[0].data = prices;
-    chart.update('active');
-  }
-  setTimeout(() => {
-    let step = 0;
-    function tick() {
-      step++;
-      if (step > 3) { step = 0; reAnimate(); }
-      setTimeout(tick, 4000);
-    }
-    setTimeout(tick, 2000);
-  }, 200);
+  /* ── INIT ────────────────────────────────────────── */
+  new ResizeObserver(resize).observe(canvas.parentElement);
+  resize();
+  requestAnimationFrame(loop);
+
 })();
 
 /* ────────────────────────────────────────────────────────
