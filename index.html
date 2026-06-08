@@ -950,15 +950,6 @@ slides.forEach(s => slideObserver.observe(s));
     prev = close;
   }
 
-  /* ── FIXED Y-RANGE (all 120 candles, computed once) ── */
-  let globalLo = Infinity, globalHi = -Infinity;
-  candles.forEach(c => {
-    globalLo = Math.min(globalLo, c.low);
-    globalHi = Math.max(globalHi, c.high);
-  });
-  const rangePad = (globalHi - globalLo) * 0.14;
-  globalLo -= rangePad;
-  globalHi += rangePad;
 
   /* ── SIGNALS (STRONG only) ───────────────────────── */
   const signals = [
@@ -1035,8 +1026,14 @@ slides.forEach(s => slideObserver.observe(s));
     cx.fillStyle = BG;
     cx.fillRect(0, 0, W, H);
 
-    // fixed price range — never changes
-    const lo = globalLo, hi = globalHi;
+    // dynamic Y range from visible window only — fills chart height like TradingView
+    let lo = Infinity, hi = -Infinity;
+    for (let i = winStart; i < winEnd; i++) {
+      lo = Math.min(lo, candles[i].low);
+      hi = Math.max(hi, candles[i].high);
+    }
+    const rp = (hi - lo) * 0.08;
+    lo -= rp; hi += rp;
     const py = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
 
     // sliding window: always 40 slots wide
