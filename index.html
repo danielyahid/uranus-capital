@@ -199,6 +199,7 @@ body.lang-en #dot-nav {
   width: 280px;
   height: 280px;
   flex-shrink: 0;
+  display: block;
 }
 .hero-headline {
   font-family: 'Playfair Display', serif;
@@ -256,11 +257,10 @@ body.lang-en #dot-nav {
 }
 .chart-wrap {
   width: 100%;
-  max-height: 280px;
-  flex: 1;
+  height: 260px;
+  flex-shrink: 0;
   position: relative;
 }
-.chart-wrap canvas { width: 100% !important; }
 .stat-pills {
   display: flex;
   gap: 12px;
@@ -552,7 +552,7 @@ body.lang-en #dot-nav {
   <!-- SLIDE 1 — HERO -->
   <section class="slide" id="slide-1">
     <div class="slide-inner">
-      <canvas id="three-canvas"></canvas>
+      <canvas id="three-canvas" width="280" height="280"></canvas>
       <h1 class="hero-headline">
         <span class="txt-hero-headline">ניהול הון בביטקוין וזהב</span>
       </h1>
@@ -568,7 +568,7 @@ body.lang-en #dot-nav {
     <div class="slide-inner">
       <h2 class="slide-title txt-indicator-title">האינדיקטור הקנייני שלנו</h2>
       <div class="chart-wrap">
-        <canvas id="btc-chart"></canvas>
+        <canvas id="btc-chart" width="800" height="260"></canvas>
       </div>
       <div class="stat-pills">
         <div class="stat-pill"><span class="txt-stat-wr">שיעור ניצחון</span> <span>78%</span></div>
@@ -783,7 +783,7 @@ function applyTheme(theme) {
     document.getElementById('btn-light').classList.add('active');
     document.getElementById('btn-dark').classList.remove('active');
   }
-  if (particlesCtx) drawParticles();
+  // particles loop runs on its own rAF — no manual redraw needed on theme change
 }
 
 function setTheme(theme) {
@@ -814,18 +814,18 @@ function onSlideEnter(idx) {
   if (idx === 3) animateTeam();
 }
 
-let scrollTimeout;
-container.addEventListener('scroll', () => {
-  clearTimeout(scrollTimeout);
-  scrollTimeout = setTimeout(() => {
-    const idx = Math.round(container.scrollTop / window.innerHeight);
-    if (idx !== activeSlide) {
-      activeSlide = idx;
-      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
-      onSlideEnter(idx);
-    }
-  }, 80);
-}, { passive: true });
+// IntersectionObserver fires reliably after each scroll-snap settles
+const slideObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const idx = [...slides].indexOf(entry.target);
+    if (idx === activeSlide) return;
+    activeSlide = idx;
+    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    onSlideEnter(idx);
+  });
+}, { root: container, threshold: 0.6 });
+slides.forEach(s => slideObserver.observe(s));
 
 /* ────────────────────────────────────────────────────────
    SLIDE 1 — THREE.JS SPHERE
