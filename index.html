@@ -878,7 +878,6 @@ slides.forEach(s => slideObserver.observe(s));
   }
 
   canvas.addEventListener('mousedown', e => {
-    e.preventDefault();
     isDragging = true;
     prevX = e.clientX; prevY = e.clientY;
     resetAutoTimer();
