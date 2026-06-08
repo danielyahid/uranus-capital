@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal — Uranus Capital</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyPLACEHOLDER-replace-with-real-key",
+      authDomain: "uranus-capital.firebaseapp.com",
+      projectId: "uranus-capital",
+      storageBucket: "uranus-capital.appspot.com",
+      messagingSenderId: "000000000000",
+      appId: "1:000000000000:web:placeholder"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) window.location.href = '/portal/dashboard.html';
+    });
+
+    window.firebaseLogin = async (email, password) => {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        return { success: true };
+      } catch (err) {
+        return { success: false, code: err.code };
+      }
+    };
+
+    window.firebaseReset = async (email) => {
+      try {
+        await sendPasswordResetEmail(auth, email);
+        return { success: true };
+      } catch (err) {
+        return { success: false, code: err.code };
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8C96A;
+      --gold-dim: #8A6E2F;
+      --black: #000000;
+      --black-2: #111111;
+      --black-3: #181818;
+      --white: #FFFFFF;
+      --white-dim: #CCCCCC;
+      --white-faint: #888888;
+      --border: rgba(201,168,76,0.2);
+      --border-bright: rgba(201,168,76,0.45);
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    /* ─── LEFT PANEL ─── */
+    .panel-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      position: relative;
+      background: var(--black-2);
+      overflow: hidden;
+    }
+
+    .panel-left-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 70% at 30% 40%, rgba(201,168,76,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 70% 70%, rgba(201,168,76,0.04) 0%, transparent 60%);
+    }
+
+    .panel-left-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .panel-left-content {
+      position: relative;
+      z-index: 2;
+      max-width: 420px;
+    }
+
+    .panel-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 60px;
+      text-decoration: none;
+    }
+
+    .panel-logo-text {
+      font-family: var(--font-serif);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+    }
+
+    .panel-headline {
+      font-family: var(--font-serif);
+      font-size: 2.8rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .panel-headline .gold { color: var(--gold); }
+    .panel-headline .italic { font-style: italic; }
+
+    .panel-subtext {
+      color: var(--white-dim);
+      font-size: 0.95rem;
+      line-height: 1.75;
+      margin-bottom: 48px;
+      font-weight: 300;
+    }
+
+    .panel-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-stat {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.4);
+      transition: border-color 0.3s;
+    }
+
+    .panel-stat:hover { border-color: var(--gold); }
+
+    .panel-stat-icon {
+      font-size: 1.3rem;
+      color: var(--gold);
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .panel-stat-value {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .panel-stat-label {
+      font-size: 0.78rem;
+      color: var(--white-faint);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ─── RIGHT PANEL (FORM) ─── */
+    .panel-right {
+      width: 480px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 50px;
+      background: var(--black);
+      border-left: 1px solid var(--border);
+      position: relative;
+    }
+
+    .login-form-wrap {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .login-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--white-faint);
+      font-size: 0.8rem;
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      margin-bottom: 40px;
+      transition: color 0.2s;
+    }
+
+    .login-back:hover { color: var(--gold); }
+
+    .login-title {
+      font-family: var(--font-serif);
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      color: var(--white-faint);
+      font-size: 0.87rem;
+      margin-bottom: 36px;
+    }
+
+    .login-subtitle span { color: var(--gold); }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      background: var(--black-2);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 14px 16px 14px 44px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-family: var(--font-sans);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input::placeholder { color: var(--white-faint); }
+
+    input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--white-faint);
+      font-size: 0.9rem;
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .input-wrap:focus-within .input-icon { color: var(--gold); }
+
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--white-faint);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+      padding: 4px;
+    }
+
+    .password-toggle:hover { color: var(--gold); }
+
+    .forgot-link {
+      text-align: right;
+      margin-top: -8px;
+      margin-bottom: 28px;
+    }
+
+    .forgot-link a {
+      color: var(--white-faint);
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .forgot-link a:hover { color: var(--gold); }
+
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      color: var(--black);
+      border: none;
+      padding: 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+      font-family: var(--font-sans);
+    }
+
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(201,168,76,0.35);
+    }
+
+    .btn-login:hover::after { transform: translateX(100%); }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-msg {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      color: #f87171;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.83rem;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .success-msg {
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.3);
+      color: #4ade80;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.83rem;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .success-msg.visible { display: block; }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 28px 0;
+    }
+
+    .login-divider::before, .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .login-divider span {
+      color: var(--white-faint);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+
+    .demo-note {
+      text-align: center;
+      color: var(--white-faint);
+      font-size: 0.78rem;
+      line-height: 1.6;
+      padding: 14px;
+      background: rgba(201,168,76,0.04);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+    }
+
+    .demo-note strong { color: var(--gold); }
+
+    .lang-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.2s;
+    }
+
+    .lang-btn:hover { background: rgba(201,168,76,0.1); }
+
+    /* ─── LOADING SPINNER ─── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: var(--black);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    /* ─── RESET MODE ─── */
+    .reset-form { display: none; }
+    .reset-form.active { display: block; }
+    .login-form-inner.hidden { display: none; }
+
+    @media (max-width: 800px) {
+      body { flex-direction: column; overflow: auto; }
+      .panel-left { display: none; }
+      .panel-right { width: 100%; min-height: 100vh; padding: 40px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="panel-left">
+  <div class="panel-left-bg"></div>
+  <div class="panel-left-grid"></div>
+  <div class="panel-left-content">
+    <a href="/" class="panel-logo">
+      <svg width="36" height="36" viewBox="0 0 38 38" fill="none">
+        <circle cx="19" cy="19" r="18" stroke="#C9A84C" stroke-width="1.5"/>
+        <circle cx="19" cy="19" r="3" fill="#C9A84C"/>
+        <ellipse cx="19" cy="19" rx="10" ry="4" stroke="#C9A84C" stroke-width="1.5" transform="rotate(-30 19 19)"/>
+      </svg>
+      <span class="panel-logo-text">URANUS CAPITAL</span>
+    </a>
+
+    <h2 class="panel-headline">
+      Your Wealth,<br />
+      <span class="gold italic">Expertly</span><br />
+      Managed
+    </h2>
+
+    <p class="panel-subtext">
+      Access your personal investment dashboard — real-time performance, market signals, and direct communication with Daniel Yahid.
+    </p>
+
+    <div class="panel-stats">
+      <div class="panel-stat">
+        <div class="panel-stat-icon">◆</div>
+        <div>
+          <div class="panel-stat-value">4,546%</div>
+          <div class="panel-stat-label">Total Returns 2020–2025</div>
+        </div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-icon">◆</div>
+        <div>
+          <div class="panel-stat-value">71–85%</div>
+          <div class="panel-stat-label">Signal Win Rate</div>
+        </div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-icon">◆</div>
+        <div>
+          <div class="panel-stat-value">4.5×</div>
+          <div class="panel-stat-label">vs Bitcoin Performance</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="panel-right">
+  <button class="lang-btn" onclick="toggleLang()" id="langToggle">עברית</button>
+
+  <div class="login-form-wrap">
+    <a href="/" class="login-back">← <span data-en="Back to main site" data-he="חזרה לאתר הראשי">Back to main site</span></a>
+
+    <!-- LOGIN FORM -->
+    <div class="login-form-inner" id="loginForm">
+      <h1 class="login-title" data-en="Welcome Back" data-he="ברוך שובך">Welcome Back</h1>
+      <p class="login-subtitle" data-en="Sign in to your <span>Uranus Capital</span> portal" data-he="כניסה לפורטל <span>יורנוס קפיטל</span>">Sign in to your <span>Uranus Capital</span> portal</p>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label data-en="Email Address" data-he="כתובת אימייל">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label data-en="Password" data-he="סיסמה">Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required />
+            <button type="button" class="password-toggle" onclick="togglePassword()">👁</button>
+          </div>
+        </div>
+
+        <div class="forgot-link">
+          <a href="#" onclick="showReset(event)" data-en="Forgot password?" data-he="שכחת סיסמה?">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn" data-en="Access Portal" data-he="כניסה לפורטל">Access Portal</button>
+      </form>
+
+      <div class="login-divider"><span data-en="SECURE LOGIN" data-he="כניסה מאובטחת">SECURE LOGIN</span></div>
+
+      <div class="demo-note">
+        <strong data-en="New client?" data-he="לקוח חדש?">New client?</strong>
+        <span data-en=" Contact Daniel Yahid to get your portal credentials." data-he=" צור קשר עם דניאל יהיד לקבלת פרטי הכניסה."> Contact Daniel Yahid to get your portal credentials.</span><br />
+        <a href="mailto:daniel.yahid@gmail.com" style="color:var(--gold); text-decoration:none; font-size:0.8rem;">daniel.yahid@gmail.com</a>
+      </div>
+    </div>
+
+    <!-- RESET FORM -->
+    <div class="reset-form" id="resetForm">
+      <a href="#" onclick="showLogin(event)" class="login-back">← <span data-en="Back to login" data-he="חזרה לכניסה">Back to login</span></a>
+
+      <h1 class="login-title" data-en="Reset Password" data-he="איפוס סיסמה">Reset Password</h1>
+      <p class="login-subtitle" data-en="Enter your email to receive a reset link" data-he="הזן אימייל לקבלת קישור איפוס">Enter your email to receive a reset link</p>
+
+      <div class="error-msg" id="resetErrorMsg"></div>
+      <div class="success-msg" id="resetSuccessMsg"></div>
+
+      <form onsubmit="handleReset(event)">
+        <div class="form-group">
+          <label data-en="Email Address" data-he="כתובת אימייל">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" id="resetEmail" placeholder="you@example.com" required />
+          </div>
+        </div>
+        <button type="submit" class="btn-login" id="resetBtn" data-en="Send Reset Link" data-he="שלח קישור איפוס">Send Reset Link</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+let isHebrew = false;
+
+function toggleLang() {
+  isHebrew = !isHebrew;
+  document.documentElement.setAttribute('lang', isHebrew ? 'he' : 'en');
+  document.documentElement.setAttribute('dir', isHebrew ? 'rtl' : 'ltr');
+  document.getElementById('langToggle').textContent = isHebrew ? 'English' : 'עברית';
+  document.querySelectorAll('[data-he]').forEach(el => {
+    el.innerHTML = isHebrew ? el.dataset.he : el.dataset.en;
+  });
+}
+
+function togglePassword() {
+  const input = document.getElementById('loginPassword');
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function showReset(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').classList.add('hidden');
+  document.getElementById('resetForm').classList.add('active');
+}
+
+function showLogin(e) {
+  e.preventDefault();
+  document.getElementById('loginForm').classList.remove('hidden');
+  document.getElementById('resetForm').classList.remove('active');
+}
+
+function setError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 5000);
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>' + (isHebrew ? 'מתחבר...' : 'Signing in...');
+
+  try {
+    if (typeof window.firebaseLogin === 'function') {
+      const result = await window.firebaseLogin(email, password);
+      if (result.success) {
+        btn.innerHTML = isHebrew ? '✓ מחובר!' : '✓ Success!';
+        btn.style.background = 'linear-gradient(135deg,#4ade80,#22c55e)';
+        setTimeout(() => window.location.href = '/portal/dashboard.html', 800);
+      } else {
+        const msgs = {
+          'auth/user-not-found': 'No account found with this email.',
+          'auth/wrong-password': 'Incorrect password. Please try again.',
+          'auth/too-many-requests': 'Too many attempts. Please try again later.',
+          'auth/invalid-email': 'Please enter a valid email address.',
+          'auth/invalid-credential': 'Invalid credentials. Please check your email and password.',
+        };
+        setError('errorMsg', msgs[result.code] || 'Login failed. Please try again.');
+        btn.disabled = false;
+        btn.textContent = isHebrew ? 'כניסה לפורטל' : 'Access Portal';
+      }
+    } else {
+      // Demo mode: redirect to dashboard without real auth
+      setTimeout(() => window.location.href = '/portal/dashboard.html', 1000);
+    }
+  } catch {
+    btn.disabled = false;
+    btn.textContent = isHebrew ? 'כניסה לפורטל' : 'Access Portal';
+    setError('errorMsg', 'Connection error. Please try again.');
+  }
+}
+
+async function handleReset(e) {
+  e.preventDefault();
+  const btn = document.getElementById('resetBtn');
+  const email = document.getElementById('resetEmail').value;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>' + (isHebrew ? 'שולח...' : 'Sending...');
+
+  try {
+    if (typeof window.firebaseReset === 'function') {
+      const result = await window.firebaseReset(email);
+      if (result.success) {
+        document.getElementById('resetSuccessMsg').textContent = 'Reset link sent! Check your inbox.';
+        document.getElementById('resetSuccessMsg').classList.add('visible');
+      } else {
+        setError('resetErrorMsg', 'Could not send reset email. Please try again.');
+      }
+    } else {
+      document.getElementById('resetSuccessMsg').textContent = 'Reset link sent! Check your inbox.';
+      document.getElementById('resetSuccessMsg').classList.add('visible');
+    }
+  } catch {
+    setError('resetErrorMsg', 'Error sending reset email.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = isHebrew ? 'שלח קישור איפוס' : 'Send Reset Link';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — Uranus Capital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc,
+      getDocs, query, orderBy, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyPLACEHOLDER-replace-with-real-key",
+      authDomain: "uranus-capital.firebaseapp.com",
+      projectId: "uranus-capital",
+      storageBucket: "uranus-capital.appspot.com",
+      messagingSenderId: "000000000000",
+      appId: "1:000000000000:web:placeholder"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ADMIN_UID = 'REPLACE_WITH_DANIEL_UID';
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user || user.uid !== ADMIN_UID) {
+        // Demo mode: allow without auth
+        window._db = db;
+        loadDemoState();
+        return;
+      }
+      window._db = db;
+      loadClients();
+    });
+
+    window.firebaseDB = db;
+    window.firebaseAuth = auth;
+    window.serverTimestamp = serverTimestamp;
+
+    window.fbAddClient = async (data) => {
+      const ref = doc(collection(db, 'clients'));
+      await setDoc(ref, { ...data, createdAt: serverTimestamp() });
+      return ref.id;
+    };
+
+    window.fbUpdateClient = async (uid, data) => {
+      await updateDoc(doc(db, 'clients', uid), data);
+    };
+
+    window.fbDeleteClient = async (uid) => {
+      await deleteDoc(doc(db, 'clients', uid));
+    };
+
+    window.fbGetClients = async () => {
+      const q = query(collection(db, 'clients'), orderBy('createdAt', 'desc'));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    };
+
+    window.fbSendMessage = async (clientId, subject, body) => {
+      await addDoc(collection(db, 'clients', clientId, 'messages'), {
+        subject, body,
+        sender: 'Daniel Yahid',
+        unread: true,
+        timestamp: serverTimestamp()
+      });
+    };
+
+    window.fbUpdatePerformance = async (clientId, month, returnPct, balance) => {
+      const ref = doc(collection(db, 'clients', clientId, 'performance'));
+      await setDoc(ref, { month, returnPct, balance, updatedAt: serverTimestamp() });
+    };
+
+    window.fbSignOut = () => signOut(auth).then(() => window.location.href = '/portal/login.html');
+  </script>
+
+  <style>
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8C96A;
+      --gold-dim: #8A6E2F;
+      --black: #000000;
+      --black-2: #0e0e0e;
+      --black-3: #181818;
+      --black-4: #1f1f1f;
+      --white: #FFFFFF;
+      --white-dim: #CCCCCC;
+      --white-faint: #777;
+      --border: rgba(201,168,76,0.18);
+      --border-bright: rgba(201,168,76,0.4);
+      --green: #4ade80;
+      --red: #f87171;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-sans: 'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--font-sans);
+      display: flex;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--black-2); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--black-2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 20px 0;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo-text {
+      font-family: var(--font-serif);
+      font-size: 0.9rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .admin-badge {
+      background: rgba(201,168,76,0.15);
+      color: var(--gold);
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 0.1em;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+
+    .sidebar-nav { list-style: none; flex: 1; padding-top: 8px; }
+    .sidebar-nav li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      color: var(--white-faint);
+      text-decoration: none;
+      font-size: 0.84rem;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-nav li a:hover,
+    .sidebar-nav li a.active {
+      color: var(--gold);
+      background: rgba(201,168,76,0.05);
+      border-left-color: var(--gold);
+    }
+
+    .sidebar-bottom {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .admin-name { font-size: 0.82rem; font-weight: 600; color: var(--white); }
+    .admin-role { font-size: 0.68rem; color: var(--white-faint); }
+
+    .sign-out { background: none; border: none; color: var(--white-faint); cursor: pointer; font-size: 0.78rem; margin-top: 8px; padding: 0; font-family: var(--font-sans); transition: color 0.2s; }
+    .sign-out:hover { color: var(--red); }
+
+    /* ─── MAIN ─── */
+    .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; max-height: 100vh; }
+
+    .topbar {
+      background: rgba(0,0,0,0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .topbar-title { font-family: var(--font-serif); font-size: 1rem; color: var(--white); }
+
+    .btn-sm {
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      padding: 7px 16px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .btn-sm:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--border-bright);
+      padding: 7px 16px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .btn-outline:hover { background: rgba(201,168,76,0.1); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid rgba(248,113,113,0.3);
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .btn-danger:hover { background: rgba(248,113,113,0.1); }
+
+    /* ─── CONTENT ─── */
+    .content { padding: 28px; flex: 1; }
+
+    /* ─── SECTION TABS ─── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 28px;
+      background: var(--black-2);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .tab {
+      padding: 8px 20px;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: none;
+      border: none;
+      color: var(--white-faint);
+      font-family: var(--font-sans);
+    }
+
+    .tab.active {
+      background: rgba(201,168,76,0.15);
+      color: var(--gold);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ─── STATS ROW ─── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--black-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--white-faint); margin-bottom: 8px; }
+    .stat-value { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--gold); }
+
+    /* ─── CLIENT TABLE ─── */
+    .table-wrap {
+      background: var(--black-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-title { font-family: var(--font-serif); font-size: 0.95rem; color: var(--white); }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 0.67rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+      background: rgba(201,168,76,0.04);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 16px;
+      font-size: 0.83rem;
+      color: var(--white-dim);
+      border-bottom: 1px solid rgba(201,168,76,0.06);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(201,168,76,0.03); }
+
+    .client-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--black);
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .status-active { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+    .status-inactive { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+
+    /* ─── FORMS ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); }
+
+    input, textarea, select {
+      background: var(--black-3);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.87rem;
+      font-family: var(--font-sans);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input::placeholder, textarea::placeholder { color: var(--white-faint); }
+    input:focus, textarea:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,0.1); }
+
+    textarea { resize: vertical; min-height: 100px; }
+
+    .card {
+      background: var(--black-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title { font-family: var(--font-serif); font-size: 0.95rem; color: var(--white); }
+    .card-body { padding: 20px; }
+
+    .success-banner {
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.3);
+      color: var(--green);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    .success-banner.visible { display: block; }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ─── CHART SECTION ─── */
+    .chart-container { position: relative; height: 200px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="24" height="24" viewBox="0 0 38 38" fill="none">
+      <circle cx="19" cy="19" r="18" stroke="#C9A84C" stroke-width="1.5"/>
+      <circle cx="19" cy="19" r="3" fill="#C9A84C"/>
+      <ellipse cx="19" cy="19" rx="10" ry="4" stroke="#C9A84C" stroke-width="1.5" transform="rotate(-30 19 19)"/>
+    </svg>
+    <div>
+      <div class="sidebar-logo-text">URANUS CAPITAL</div>
+      <div class="admin-badge">ADMIN</div>
+    </div>
+  </div>
+
+  <ul class="sidebar-nav">
+    <li><a href="#" class="active" onclick="showTab('overview',this)">📊 Overview</a></li>
+    <li><a href="#" onclick="showTab('clients',this)">👥 Clients</a></li>
+    <li><a href="#" onclick="showTab('add-client',this)">➕ Add Client</a></li>
+    <li><a href="#" onclick="showTab('messages',this)">✉ Send Message</a></li>
+    <li><a href="#" onclick="showTab('performance',this)">📈 Performance</a></li>
+    <li><a href="#" onclick="showTab('signals',this)">⚡ Signals</a></li>
+  </ul>
+
+  <div class="sidebar-bottom">
+    <div class="admin-name">Daniel Yahid</div>
+    <div class="admin-role">Founder & CIO</div>
+    <button class="sign-out" onclick="typeof fbSignOut === 'function' ? fbSignOut() : (window.location.href='/portal/login.html')">Sign out →</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Admin Panel</div>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-outline" onclick="loadClients()">↺ Refresh</button>
+      <button class="btn-sm" onclick="showTab('add-client', null)">+ New Client</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Clients</div>
+          <div class="stat-value" id="totalClients">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">AUM (Demo)</div>
+          <div class="stat-value" id="totalAUM">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Clients</div>
+          <div class="stat-value" id="activeClients">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">YTD Return</div>
+          <div class="stat-value" style="color:var(--green)">+40.7%</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Portfolio Performance Overview</div>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="overviewChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="tab-content" id="tab-clients">
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="table-title">All Clients</div>
+          <button class="btn-sm" onclick="showTab('add-client', null)">+ Add Client</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Email</th>
+              <th>Balance</th>
+              <th>Return</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="clientsTableBody">
+            <tr><td colspan="6" style="text-align:center; color:var(--white-faint); padding:32px;">Loading clients...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ADD CLIENT -->
+    <div class="tab-content" id="tab-add-client">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Add New Client</div>
+        </div>
+        <div class="card-body">
+          <div class="success-banner" id="addClientSuccess">✓ Client added successfully!</div>
+          <form onsubmit="handleAddClient(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="newClientName" placeholder="John Smith" required />
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="newClientEmail" placeholder="client@example.com" required />
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="newClientPhone" placeholder="+972 50 000 0000" />
+              </div>
+              <div class="form-group">
+                <label>Initial Balance ($)</label>
+                <input type="number" id="newClientBalance" placeholder="50000" min="0" step="100" />
+              </div>
+              <div class="form-group">
+                <label>Total Return (%)</label>
+                <input type="number" id="newClientReturn" placeholder="0.0" step="0.1" />
+              </div>
+              <div class="form-group">
+                <label>Tier</label>
+                <select id="newClientTier">
+                  <option value="standard">Standard</option>
+                  <option value="aggressive">Aggressive</option>
+                  <option value="conservative">Conservative</option>
+                  <option value="vip">VIP</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select id="newClientStatus">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Firebase UID (optional)</label>
+                <input type="text" id="newClientUID" placeholder="Leave blank to auto-generate" />
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Notes</label>
+              <textarea id="newClientNotes" placeholder="Internal notes about this client..."></textarea>
+            </div>
+            <div class="row">
+              <button type="submit" class="btn-sm">Add Client</button>
+              <button type="button" class="btn-outline" onclick="resetAddClientForm()">Clear</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEND MESSAGE -->
+    <div class="tab-content" id="tab-messages">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Send Message to Client</div>
+        </div>
+        <div class="card-body">
+          <div class="success-banner" id="sendMsgSuccess">✓ Message sent!</div>
+          <form onsubmit="handleSendMessage(event)">
+            <div class="form-group" style="margin-bottom:16px;">
+              <label>Recipient Client</label>
+              <select id="msgClientSelect">
+                <option value="">Select a client...</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:16px;">
+              <label>Subject</label>
+              <input type="text" id="msgSubject" placeholder="e.g. Bitcoin entering accumulation zone" required />
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Message Body</label>
+              <textarea id="msgBody" style="min-height:160px;" placeholder="Write your message here..." required></textarea>
+            </div>
+            <div class="row">
+              <button type="submit" class="btn-sm">Send Message</button>
+              <button type="button" class="btn-outline" onclick="broadcastMessage()">Broadcast to All</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Message Templates</div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button class="btn-outline" onclick="loadTemplate('btc-accumulation')">◆ Bitcoin Accumulation Zone</button>
+            <button class="btn-outline" onclick="loadTemplate('gold-breakout')">◆ Gold Breakout Confirmed</button>
+            <button class="btn-outline" onclick="loadTemplate('monthly-update')">◆ Monthly Performance Update</button>
+            <button class="btn-outline" onclick="loadTemplate('risk-off')">◆ Risk-Off: Reducing Exposure</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERFORMANCE -->
+    <div class="tab-content" id="tab-performance">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Update Client Performance</div>
+        </div>
+        <div class="card-body">
+          <div class="success-banner" id="perfSuccess">✓ Performance updated!</div>
+          <form onsubmit="handleUpdatePerf(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Client</label>
+                <select id="perfClientSelect">
+                  <option value="">Select client...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Month (YYYY-MM)</label>
+                <input type="month" id="perfMonth" required />
+              </div>
+              <div class="form-group">
+                <label>Return (%)</label>
+                <input type="number" id="perfReturn" step="0.01" placeholder="8.3" required />
+              </div>
+              <div class="form-group">
+                <label>End Balance ($)</label>
+                <input type="number" id="perfBalance" step="1" placeholder="247830" required />
+              </div>
+            </div>
+            <button type="submit" class="btn-sm">Update Performance</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- GLOBAL PERFORMANCE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Global Fund Performance (Public Site Data)</div>
+        </div>
+        <div class="card-body">
+          <p style="color:var(--white-faint); font-size:0.82rem; margin-bottom:16px;">These values are displayed on the public website. Edit index.html directly to update.</p>
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Uranus Capital</th>
+                <th>Bitcoin</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>2020</td><td style="color:var(--green)">+181.3%</td><td style="color:var(--green)">+303.3%</td></tr>
+              <tr><td>2021</td><td style="color:var(--green)">+191.7%</td><td style="color:var(--green)">+57.2%</td></tr>
+              <tr><td>2022</td><td style="color:var(--red)">-17.7%</td><td style="color:var(--red)">-65.4%</td></tr>
+              <tr><td>2023</td><td style="color:var(--green)">+91.4%</td><td style="color:var(--green)">+154.3%</td></tr>
+              <tr><td>2024</td><td style="color:var(--green)">+155.5%</td><td style="color:var(--green)">+111.3%</td></tr>
+              <tr><td>2025</td><td style="color:var(--green)">+40.7%</td><td style="color:var(--red)">-6.34%</td></tr>
+              <tr style="background:rgba(201,168,76,0.05);">
+                <td><strong>Total</strong></td>
+                <td style="color:var(--gold); font-weight:700;">+4,546%</td>
+                <td style="color:var(--white-dim)">+1,004%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNALS -->
+    <div class="tab-content" id="tab-signals">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Publish Trading Signal</div>
+        </div>
+        <div class="card-body">
+          <div class="success-banner" id="signalSuccess">✓ Signal published to all clients!</div>
+          <form onsubmit="handlePublishSignal(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Asset</label>
+                <select id="signalAsset">
+                  <option value="BTC">Bitcoin (BTC)</option>
+                  <option value="XAU">Gold (XAU)</option>
+                  <option value="BOTH">Both</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Direction</label>
+                <select id="signalDir">
+                  <option value="LONG">Long (Buy)</option>
+                  <option value="SHORT">Short (Sell)</option>
+                  <option value="WATCH">Watch</option>
+                  <option value="EXIT">Exit</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Entry Price ($)</label>
+                <input type="number" id="signalEntry" step="0.01" placeholder="85000" />
+              </div>
+              <div class="form-group">
+                <label>Target Price ($)</label>
+                <input type="number" id="signalTarget" step="0.01" placeholder="95000" />
+              </div>
+              <div class="form-group">
+                <label>Stop Loss ($)</label>
+                <input type="number" id="signalStop" step="0.01" placeholder="80000" />
+              </div>
+              <div class="form-group">
+                <label>Confidence (%)</label>
+                <input type="number" id="signalConf" min="0" max="100" step="1" placeholder="78" />
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label>Analysis Notes</label>
+              <textarea id="signalNotes" placeholder="Explain the rationale for this signal..."></textarea>
+            </div>
+            <button type="submit" class="btn-sm">Publish Signal</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── DEMO CLIENT DATA ───
+let demoClients = [
+  { id: 'demo1', name: 'David Cohen', email: 'david@example.com', balance: 247830, totalReturn: 147.8, status: 'active', tier: 'aggressive' },
+  { id: 'demo2', name: 'Sarah Levi', email: 'sarah@example.com', balance: 183500, totalReturn: 83.5, status: 'active', tier: 'standard' },
+  { id: 'demo3', name: 'Moshe Katz', email: 'moshe@example.com', balance: 512000, totalReturn: 212.0, status: 'active', tier: 'vip' },
+  { id: 'demo4', name: 'Rachel Gold', email: 'rachel@example.com', balance: 95000, totalReturn: -5.0, status: 'inactive', tier: 'conservative' }
+];
+
+function loadDemoState() {
+  loadClients();
+}
+
+function loadClients() {
+  const clients = demoClients;
+
+  // Stats
+  const totalAUM = clients.reduce((sum, c) => sum + (c.balance || 0), 0);
+  document.getElementById('totalClients').textContent = clients.length;
+  document.getElementById('totalAUM').textContent = '$' + (totalAUM / 1000).toFixed(0) + 'K';
+  document.getElementById('activeClients').textContent = clients.filter(c => c.status === 'active').length;
+
+  // Table
+  const tbody = document.getElementById('clientsTableBody');
+  tbody.innerHTML = clients.map(c => `
+    <tr>
+      <td>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="client-avatar">${(c.name || 'C')[0]}</div>
+          <span>${c.name || '—'}</span>
+        </div>
+      </td>
+      <td>${c.email || '—'}</td>
+      <td>$${(c.balance || 0).toLocaleString()}</td>
+      <td style="color:${c.totalReturn >= 0 ? 'var(--green)' : 'var(--red)'}">
+        ${c.totalReturn >= 0 ? '+' : ''}${c.totalReturn || 0}%
+      </td>
+      <td><span class="status-badge ${c.status === 'active' ? 'status-active' : 'status-inactive'}">${c.status}</span></td>
+      <td>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-outline" style="padding:4px 10px; font-size:0.72rem;" onclick="editClient('${c.id}')">Edit</button>
+          <button class="btn-danger" onclick="deleteClient('${c.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Populate selects
+  const options = clients.map(c => `<option value="${c.id}">${c.name} (${c.email})</option>`).join('');
+  ['msgClientSelect', 'perfClientSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const current = el.value;
+      el.innerHTML = '<option value="">Select a client...</option>' + options;
+      el.value = current;
+    }
+  });
+
+  // Overview chart
+  drawOverviewChart(clients);
+}
+
+function drawOverviewChart(clients) {
+  const ctx = document.getElementById('overviewChart').getContext('2d');
+  const years = ['2020', '2021', '2022', '2023', '2024', '2025'];
+  const uranus = [181.3, 191.7, -17.7, 91.4, 155.5, 40.7];
+  const btc = [303.3, 57.2, -65.4, 154.3, 111.3, -6.34];
+
+  // Destroy previous chart if any
+  if (window._overviewChart) window._overviewChart.destroy();
+
+  window._overviewChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: 'Uranus Capital',
+          data: uranus,
+          backgroundColor: uranus.map(v => v >= 0 ? 'rgba(201,168,76,0.7)' : 'rgba(201,168,76,0.3)'),
+          borderColor: '#C9A84C',
+          borderWidth: 1,
+          borderRadius: 3
+        },
+        {
+          label: 'Bitcoin',
+          data: btc,
+          backgroundColor: btc.map(v => v >= 0 ? 'rgba(249,115,22,0.5)' : 'rgba(249,115,22,0.2)'),
+          borderColor: '#F97316',
+          borderWidth: 1,
+          borderRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#888', font: { size: 11 } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(17,17,17,0.95)',
+          borderColor: 'rgba(201,168,76,0.3)',
+          borderWidth: 1,
+          titleColor: '#C9A84C',
+          bodyColor: '#ccc',
+          callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y >= 0 ? '+' : ''}${c.parsed.y}%` }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(201,168,76,0.06)' }, ticks: { color: '#666' } },
+        y: {
+          grid: { color: 'rgba(201,168,76,0.06)' },
+          ticks: { color: '#666', callback: v => v + '%' }
+        }
+      }
+    }
+  });
+}
+
+// ─── TABS ───
+function showTab(id, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id === 'clients') loadClients();
+}
+
+// ─── ADD CLIENT ───
+async function handleAddClient(e) {
+  e.preventDefault();
+  const data = {
+    name: document.getElementById('newClientName').value,
+    email: document.getElementById('newClientEmail').value,
+    phone: document.getElementById('newClientPhone').value,
+    balance: parseFloat(document.getElementById('newClientBalance').value) || 0,
+    totalReturn: parseFloat(document.getElementById('newClientReturn').value) || 0,
+    tier: document.getElementById('newClientTier').value,
+    status: document.getElementById('newClientStatus').value,
+    notes: document.getElementById('newClientNotes').value,
+  };
+
+  try {
+    if (typeof window.fbAddClient === 'function') {
+      await window.fbAddClient(data);
+    } else {
+      demoClients.push({ id: 'demo' + Date.now(), ...data });
+    }
+    showBanner('addClientSuccess');
+    resetAddClientForm();
+    loadClients();
+  } catch (err) {
+    alert('Error adding client: ' + err.message);
+  }
+}
+
+function resetAddClientForm() {
+  ['newClientName','newClientEmail','newClientPhone','newClientBalance','newClientReturn','newClientUID','newClientNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+// ─── SEND MESSAGE ───
+async function handleSendMessage(e) {
+  e.preventDefault();
+  const clientId = document.getElementById('msgClientSelect').value;
+  const subject = document.getElementById('msgSubject').value;
+  const body = document.getElementById('msgBody').value;
+
+  if (!clientId) { alert('Please select a client.'); return; }
+
+  try {
+    if (typeof window.fbSendMessage === 'function') {
+      await window.fbSendMessage(clientId, subject, body);
+    }
+    showBanner('sendMsgSuccess');
+    document.getElementById('msgSubject').value = '';
+    document.getElementById('msgBody').value = '';
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function broadcastMessage() {
+  const subject = document.getElementById('msgSubject').value;
+  const body = document.getElementById('msgBody').value;
+  if (!subject || !body) { alert('Please fill in subject and message.'); return; }
+  if (confirm('Broadcast this message to ALL clients?')) {
+    showBanner('sendMsgSuccess');
+  }
+}
+
+function loadTemplate(key) {
+  const templates = {
+    'btc-accumulation': {
+      subject: 'Bitcoin entering accumulation zone — increasing exposure',
+      body: 'On-chain metrics are showing strong accumulation patterns below the current price level. Whale wallets are absorbing supply, exchange balances are declining, and MVRV is indicating undervaluation.\n\nI\'ve increased BTC allocation by 15% for aggressive tier clients. Conservative/standard tier: no action required at this time.\n\nTarget: +30-40% from current levels over the next 60-90 days.\n\n— Daniel'
+    },
+    'gold-breakout': {
+      subject: 'Gold breakout confirmed — maintaining full position',
+      body: 'Gold has broken above the key resistance level with strong volume confirmation. The macro environment remains favorable — dollar weakness, geopolitical tensions, and central bank buying all support continued upside.\n\nNo changes to current allocation. Our gold positions are well-sized for this move.\n\nTarget: +12-18% from current levels.\n\n— Daniel'
+    },
+    'monthly-update': {
+      subject: 'Monthly Performance Update',
+      body: 'Your portfolio performance update for the month:\n\n[Add specific performance data here]\n\nKey positions:\n- Bitcoin: [status]\n- Gold: [status]\n\nMarket outlook for next month:\n[Add commentary here]\n\n— Daniel'
+    },
+    'risk-off': {
+      subject: 'Risk management update — reducing exposure',
+      body: 'Given current market conditions and technical signals, I\'m implementing a risk-off posture:\n\n- Reducing BTC allocation by 20%\n- Moving proceeds to stablecoin/cash\n- Gold positions maintained\n\nThis is a precautionary measure. I\'ll notify you when conditions improve for re-entry.\n\n— Daniel'
+    }
+  };
+
+  const t = templates[key];
+  if (t) {
+    document.getElementById('msgSubject').value = t.subject;
+    document.getElementById('msgBody').value = t.body;
+  }
+}
+
+// ─── PERFORMANCE ───
+async function handleUpdatePerf(e) {
+  e.preventDefault();
+  const clientId = document.getElementById('perfClientSelect').value;
+  const month = document.getElementById('perfMonth').value;
+  const returnPct = parseFloat(document.getElementById('perfReturn').value);
+  const balance = parseFloat(document.getElementById('perfBalance').value);
+
+  if (!clientId) { alert('Select a client.'); return; }
+
+  try {
+    if (typeof window.fbUpdatePerformance === 'function') {
+      await window.fbUpdatePerformance(clientId, month, returnPct, balance);
+    }
+
+    // Update demo data
+    const c = demoClients.find(c => c.id === clientId);
+    if (c) { c.balance = balance; c.totalReturn = returnPct; }
+
+    showBanner('perfSuccess');
+    loadClients();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// ─── SIGNALS ───
+async function handlePublishSignal(e) {
+  e.preventDefault();
+  showBanner('signalSuccess');
+  e.target.reset();
+}
+
+// ─── CLIENT ACTIONS ───
+function editClient(id) {
+  const c = demoClients.find(c => c.id === id);
+  if (!c) return;
+  const newBalance = prompt(`Edit balance for ${c.name}:`, c.balance);
+  if (newBalance !== null) {
+    c.balance = parseFloat(newBalance) || c.balance;
+    loadClients();
+  }
+}
+
+function deleteClient(id) {
+  if (confirm('Delete this client? This cannot be undone.')) {
+    demoClients = demoClients.filter(c => c.id !== id);
+    if (typeof window.fbDeleteClient === 'function') window.fbDeleteClient(id).catch(() => {});
+    loadClients();
+  }
+}
+
+// ─── HELPERS ───
+function showBanner(id) {
+  const el = document.getElementById(id);
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 4000);
+}
+
+// ─── INIT ───
+loadDemoState();
+</script>
+</body>
+</html>
