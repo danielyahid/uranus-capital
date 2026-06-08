@@ -388,7 +388,9 @@ nav.scrolled{
 .chart-legend{display:flex;gap:20px}
 .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
 .legend-item{font-size:.8rem;color:var(--text-d)}
-#perf-chart-canvas{display:block;width:100%;height:340px}
+/* fixed-height wrapper so Chart.js responsive mode never enters a resize loop */
+.perf-canvas-wrap{position:relative;height:340px;width:100%;overflow:hidden}
+#perf-chart-canvas{display:block;width:100%;height:100%}
 
 /* table */
 .perf-table-wrap{
@@ -507,7 +509,7 @@ footer{
   .crash-numbers{flex-direction:column}
   .crash-card{min-width:unset;width:100%}
   .perf-chart-wrap{padding:20px}
-  #perf-chart-canvas{height:220px}
+  .perf-canvas-wrap{height:220px}
   .act3-props{grid-template-columns:1fr}
 }
 </style>
@@ -691,7 +693,7 @@ footer{
         <div class="legend-item"><span class="legend-dot" style="background:#4a8aff"></span><span data-en="Bitcoin" data-he="ביטקוין">Bitcoin</span></div>
       </div>
     </div>
-    <canvas id="perf-chart-canvas"></canvas>
+    <div class="perf-canvas-wrap"><canvas id="perf-chart-canvas"></canvas></div>
   </div>
 
   <div class="perf-table-wrap">
@@ -1007,11 +1009,10 @@ gsap.registerPlugin(ScrollTrigger);
 /* ═══════════════════════════════════════════════
    GSAP HERO ENTRANCE
 ═══════════════════════════════════════════════ */
-gsap.to('.hero-eyebrow', { opacity: 1, y: 0, duration: 1, delay: 1.2, ease: 'power2.out' });
-gsap.from('.hero-title', { opacity: 0, y: 50, duration: 1.1, delay: 1.6, ease: 'power2.out', onStart() { document.querySelector('.hero-title').style.opacity = 1 } });
-gsap.to('.hero-title', { opacity: 1, y: 0, duration: 1.1, delay: 1.6, ease: 'power2.out' });
-gsap.to('.hero-sub', { opacity: 1, y: 0, duration: 1, delay: 2, ease: 'power2.out' });
-gsap.to('.hero-cta', { opacity: 1, y: 0, duration: 1, delay: 2.3, ease: 'power2.out' });
+gsap.fromTo('.hero-eyebrow', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1, delay: 1.2, ease: 'power2.out' });
+gsap.fromTo('.hero-title',   { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.1, delay: 1.6, ease: 'power2.out' });
+gsap.fromTo('.hero-sub',     { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1,   delay: 2.0, ease: 'power2.out' });
+gsap.fromTo('.hero-cta',     { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1,   delay: 2.3, ease: 'power2.out' });
 
 /* ═══════════════════════════════════════════════
    SCROLL PROGRESS BAR
@@ -1077,28 +1078,32 @@ window.addEventListener('scroll', () => {
 })();
 
 // Act 2 text reveals
-gsap.to('.act2-tag', {
-  opacity: 1, y: 0, duration: .8,
-  scrollTrigger: { trigger: '#act2', start: 'top 70%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.act2-headline', {
-  opacity: 1, y: 0, duration: .9, delay: .15,
-  scrollTrigger: { trigger: '#act2', start: 'top 65%', toggleActions: 'play none none reverse' }
-});
+gsap.fromTo('.act2-tag',
+  { opacity: 0, y: 24 },
+  { opacity: 1, y: 0, duration: .8, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act2', start: 'top 70%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.act2-headline',
+  { opacity: 0, y: 28 },
+  { opacity: 1, y: 0, duration: .9, delay: .15, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act2', start: 'top 65%', toggleActions: 'play none none reverse' } }
+);
 gsap.utils.toArray('.crash-card').forEach((el, i) => {
-  gsap.to(el, {
-    opacity: 1, y: 0, duration: .8, delay: i * .2,
-    scrollTrigger: { trigger: '#act2', start: 'top 55%', toggleActions: 'play none none reverse' }
-  });
+  gsap.fromTo(el,
+    { opacity: 0, y: 32 },
+    { opacity: 1, y: 0, duration: .8, delay: i * .2, ease: 'power2.out',
+      scrollTrigger: { trigger: '#act2', start: 'top 55%', toggleActions: 'play none none reverse' } }
+  );
   ScrollTrigger.create({
     trigger: '#act2', start: 'top 50%', once: true,
     onEnter() { animateCounter(el.querySelector('.crash-pct')) }
   });
 });
-gsap.to('.act2-text', {
-  opacity: 1, y: 0, duration: .9, delay: .5,
-  scrollTrigger: { trigger: '#act2', start: 'top 40%', toggleActions: 'play none none reverse' }
-});
+gsap.fromTo('.act2-text',
+  { opacity: 0, y: 20 },
+  { opacity: 1, y: 0, duration: .9, delay: .5, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act2', start: 'top 40%', toggleActions: 'play none none reverse' } }
+);
 
 /* ═══════════════════════════════════════════════
    ACT 3 — BEAM + ORBIT
@@ -1115,30 +1120,31 @@ ScrollTrigger.create({
   },
 });
 
-gsap.to('.act3-tag', {
-  opacity: 1, duration: .8,
-  scrollTrigger: { trigger: '#act3', start: 'top 65%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.act3-headline', {
-  opacity: 1, y: 0, duration: .9, delay: .2,
-  scrollTrigger: { trigger: '#act3', start: 'top 60%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.act3-sub', {
-  opacity: 1, duration: .8, delay: .4,
-  scrollTrigger: { trigger: '#act3', start: 'top 55%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.orbit-stage', {
-  opacity: 1, scale: 1, duration: 1.2, delay: .5,
-  scrollTrigger: { trigger: '#act3', start: 'top 50%', toggleActions: 'play none none reverse' }
-});
-gsap.from('.orbit-stage', {
-  scale: .5, duration: 1.2, delay: .5,
-  scrollTrigger: { trigger: '#act3', start: 'top 50%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.act3-props', {
-  opacity: 1, y: 0, duration: .9, delay: .8,
-  scrollTrigger: { trigger: '#act3', start: 'top 45%', toggleActions: 'play none none reverse' }
-});
+gsap.fromTo('.act3-tag',
+  { opacity: 0 },
+  { opacity: 1, duration: .8, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act3', start: 'top 65%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.act3-headline',
+  { opacity: 0, y: 28 },
+  { opacity: 1, y: 0, duration: .9, delay: .2, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act3', start: 'top 60%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.act3-sub',
+  { opacity: 0 },
+  { opacity: 1, duration: .8, delay: .4, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act3', start: 'top 55%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.orbit-stage',
+  { opacity: 0, scale: .5 },
+  { opacity: 1, scale: 1, duration: 1.2, delay: .5, ease: 'back.out(1.4)',
+    scrollTrigger: { trigger: '#act3', start: 'top 50%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.act3-props',
+  { opacity: 0, y: 20 },
+  { opacity: 1, y: 0, duration: .9, delay: .8, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act3', start: 'top 45%', toggleActions: 'play none none reverse' } }
+);
 
 /* ═══════════════════════════════════════════════
    ACT 4 — MATRIX CANVAS
@@ -1187,14 +1193,16 @@ gsap.to('.act3-props', {
 })();
 
 // Act 4 reveals
-gsap.to('.act4-left', {
-  opacity: 1, x: 0, duration: 1, ease: 'power2.out',
-  scrollTrigger: { trigger: '#act4', start: 'top 65%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.act4-right', {
-  opacity: 1, x: 0, duration: 1, delay: .2, ease: 'power2.out',
-  scrollTrigger: { trigger: '#act4', start: 'top 65%', toggleActions: 'play none none reverse' }
-});
+gsap.fromTo('.act4-left',
+  { opacity: 0, x: -40 },
+  { opacity: 1, x: 0, duration: 1, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act4', start: 'top 65%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.act4-right',
+  { opacity: 0, x: 40 },
+  { opacity: 1, x: 0, duration: 1, delay: .2, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act4', start: 'top 65%', toggleActions: 'play none none reverse' } }
+);
 
 // Stats counters triggered by scroll
 ScrollTrigger.create({
@@ -1318,13 +1326,13 @@ const progressivePlugin = {
 ScrollTrigger.create({
   trigger: '#act5', start: 'top 75%', once: true,
   onEnter() {
-    gsap.to('.act5-header', { opacity: 1, y: 0, duration: .9 });
-    gsap.to('.perf-chart-wrap', { opacity: 1, y: 0, duration: .9, delay: .2 });
+    gsap.fromTo('.act5-header',    { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: .9, ease: 'power2.out' });
+    gsap.fromTo('.perf-chart-wrap',{ opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: .9, delay: .2, ease: 'power2.out' });
     setTimeout(buildPerfChart, 400);
     setTimeout(revealTableRows, 900);
     setTimeout(buildMaxDD, 1200);
-    gsap.to('.perf-table-wrap', { opacity: 1, duration: .8, delay: .8 });
-    gsap.to('.maxdd-section', { opacity: 1, y: 0, duration: .8, delay: 1.4 });
+    gsap.fromTo('.perf-table-wrap', { opacity: 0 }, { opacity: 1, duration: .8, delay: .8 });
+    gsap.fromTo('.maxdd-section',   { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .8, delay: 1.4, ease: 'power2.out' });
   }
 });
 
@@ -1376,6 +1384,7 @@ function buildPerfChart() {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      resizeDelay: 0,
       interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: { display: false },
@@ -1496,18 +1505,21 @@ function buildMaxDD() {
 })();
 
 // Act 6 reveals
-gsap.to('.act6-header', {
-  opacity: 1, y: 0, duration: .9,
-  scrollTrigger: { trigger: '#act6', start: 'top 70%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.contact-left', {
-  opacity: 1, x: 0, duration: 1, ease: 'power2.out',
-  scrollTrigger: { trigger: '#act6', start: 'top 60%', toggleActions: 'play none none reverse' }
-});
-gsap.to('.contact-right', {
-  opacity: 1, x: 0, duration: 1, delay: .2, ease: 'power2.out',
-  scrollTrigger: { trigger: '#act6', start: 'top 60%', toggleActions: 'play none none reverse' }
-});
+gsap.fromTo('.act6-header',
+  { opacity: 0, y: 28 },
+  { opacity: 1, y: 0, duration: .9, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act6', start: 'top 70%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.contact-left',
+  { opacity: 0, x: -40 },
+  { opacity: 1, x: 0, duration: 1, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act6', start: 'top 60%', toggleActions: 'play none none reverse' } }
+);
+gsap.fromTo('.contact-right',
+  { opacity: 0, x: 40 },
+  { opacity: 1, x: 0, duration: 1, delay: .2, ease: 'power2.out',
+    scrollTrigger: { trigger: '#act6', start: 'top 60%', toggleActions: 'play none none reverse' } }
+);
 
 /* ═══════════════════════════════════════════════
    COUNTER UTILITIES
