@@ -243,7 +243,7 @@ body.lang-en #dot-nav {
 }
 
 /* ── SLIDE 2 — INDICATOR ──────────────────────────────── */
-#slide-2 .slide-inner { padding: 20px 24px; }
+#slide-2 .slide-inner, #slide-6 .slide-inner { padding: 20px 24px; }
 .slide-title {
   font-family: 'Playfair Display', serif;
   font-size: clamp(18px, 2.8vw, 28px);
@@ -265,7 +265,7 @@ body.lang-en #dot-nav {
   position: relative;
 }
 .s2-chart-wrap canvas { display: block; }
-#btc-slider { width: 100%; accent-color: var(--gold); cursor: pointer; }
+#btc-slider, #btc-slider-real { width: 100%; accent-color: var(--gold); cursor: pointer; }
 .s2-slider-wrap { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
 .s2-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 .s2-stats {
@@ -545,6 +545,7 @@ body.lang-en #dot-nav {
   <div class="dot" data-slide="2" onclick="goToSlide(2)"></div>
   <div class="dot" data-slide="3" onclick="goToSlide(3)"></div>
   <div class="dot" data-slide="4" onclick="goToSlide(4)"></div>
+  <div class="dot" data-slide="5" onclick="goToSlide(5)"></div>
 </div>
 
 <!-- SCROLL CONTAINER -->
@@ -662,6 +663,27 @@ body.lang-en #dot-nav {
           <a href="mailto:daniel.yahid@gmail.com">daniel.yahid@gmail.com</a>
           <a href="tel:+972503838314">050-383-8314</a>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 6 — REAL BTC CHART -->
+  <section class="slide" id="slide-6">
+    <div class="slide-inner">
+      <div class="s2-header">
+        <h2 class="slide-title" data-he="גרף ביטקוין אמיתי" data-en="Real Bitcoin Chart"></h2>
+        <p class="slide-sub" data-he="נתוני מחיר אמיתיים מ-CoinGecko — 365 הימים האחרונים" data-en="Live price data from CoinGecko — last 365 days"></p>
+      </div>
+      <div class="s2-chart-wrap">
+        <canvas id="btc-canvas-real"></canvas>
+      </div>
+      <div class="s2-slider-wrap">
+        <input type="range" id="btc-slider-real" min="0" max="100" value="0" dir="ltr">
+      </div>
+      <div class="s2-stats">
+        <div class="stat-pill" data-he="נתונים חיים" data-en="Live Data"></div>
+        <div class="stat-pill" data-he="365 ימים" data-en="365 Days"></div>
+        <div class="stat-pill" data-he="מקור: CoinGecko" data-en="Source: CoinGecko"></div>
       </div>
     </div>
   </section>
@@ -1244,6 +1266,283 @@ slides.forEach(s => slideObserver.observe(s));
   resize();
   requestAnimationFrame(loop);
 
+})();
+
+/* ────────────────────────────────────────────────────────
+   SLIDE 6 — REAL BTC CANDLESTICK CHART (CoinGecko API)
+──────────────────────────────────────────────────────── */
+(async function initBtcChartReal() {
+  const canvas = document.getElementById('btc-canvas-real');
+  const cx     = canvas.getContext('2d');
+  const slider = document.getElementById('btc-slider-real');
+  const wrap   = canvas.parentElement;
+
+  const PAD = { top: 24, right: 12, bottom: 32, left: 52 };
+
+  function drawMessage(msg) {
+    const W = wrap.clientWidth || 600;
+    const H = wrap.clientHeight || 240;
+    canvas.width = W; canvas.height = H;
+    const isDark = document.body.classList.contains('dark');
+    cx.fillStyle = isDark ? '#1A1A1A' : '#FFFFFF';
+    cx.fillRect(0, 0, W, H);
+    cx.fillStyle = isDark ? '#8A8680' : '#5A5A5A';
+    cx.font = '14px Roboto,sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    cx.fillText(msg, W / 2, H / 2);
+  }
+
+  drawMessage('Loading…');
+
+  let ohlcRaw;
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/ohlc?vs_currency=usd&days=365');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    ohlcRaw = await res.json();
+  } catch (_) {
+    drawMessage('Data unavailable');
+    return;
+  }
+  if (!Array.isArray(ohlcRaw) || ohlcRaw.length === 0) {
+    drawMessage('Data unavailable');
+    return;
+  }
+
+  const candles = ohlcRaw.map(([ts, open, high, low, close]) => ({ open, high, low, close, ts }));
+  const TOTAL   = candles.length;
+
+  let globalLo = Infinity, globalHi = -Infinity;
+  candles.forEach(c => {
+    globalLo = Math.min(globalLo, c.low);
+    globalHi = Math.max(globalHi, c.high);
+  });
+  const rangePad = (globalHi - globalLo) * 0.08;
+  globalLo -= rangePad;
+  globalHi += rangePad;
+
+  /* X-axis labels — first candle of each month */
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const xLabels = [];
+  let lastMonth = -1;
+  candles.forEach((c, i) => {
+    const d = new Date(c.ts);
+    const m = d.getMonth();
+    if (m !== lastMonth) {
+      lastMonth = m;
+      const label = m === 0 ? MONTHS[m] + ' ' + String(d.getFullYear()).slice(2) : MONTHS[m];
+      xLabels.push({ idx: i, label });
+    }
+  });
+
+  /* Y-ticks at $20k intervals */
+  const yTicks = [];
+  const TICK_STEP = 20000;
+  for (let t = Math.ceil(globalLo / TICK_STEP) * TICK_STEP; t <= globalHi; t += TICK_STEP) yTicks.push(t);
+
+  /* Signals at same relative fractions as Slide 2 */
+  const signals = [
+    { frac: 6/150,   type: 'STRONG_BUY',  label: 'BUY'  },
+    { frac: 23/150,  type: 'STRONG_SELL', label: 'SELL' },
+    { frac: 60/150,  type: 'STRONG_BUY',  label: 'BUY'  },
+    { frac: 73/150,  type: 'STRONG_SELL', label: 'SELL' },
+    { frac: 90/150,  type: 'STRONG_BUY',  label: 'BUY'  },
+    { frac: 103/150, type: 'STRONG_SELL', label: 'SELL' },
+    { frac: 123/150, type: 'STRONG_SELL', label: 'SELL' },
+  ].map(s => ({ ...s, index: Math.round(s.frac * (TOTAL - 1)) }));
+
+  let WINDOW = 55;
+  let visibleCandles = 1;
+  let candleProg = 1;
+  let animFrames  = {};
+  let isPaused    = false;
+  let pauseTimer  = null;
+  let lastStepTime = 0;
+  let pauseIconAlpha = 0;
+
+  function resize() {
+    const w = wrap.clientWidth || 600;
+    const h = wrap.clientHeight || 240;
+    WINDOW = w < 768 ? 40 : 85;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w; canvas.height = h;
+    }
+    draw();
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const cw = W - PAD.left - PAD.right;
+    const ch = H - PAD.top - PAD.bottom;
+
+    const isDark = document.body.classList.contains('dark');
+    const BG      = isDark ? '#1A1A1A' : '#FFFFFF';
+    const GRID    = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const LABEL_C = isDark ? '#8A8680' : '#5A5A5A';
+    const BULL    = '#26a69a';
+    const BEAR    = '#ef5350';
+
+    cx.clearRect(0, 0, W, H);
+    cx.fillStyle = BG; cx.fillRect(0, 0, W, H);
+
+    const lo = globalLo, hi = globalHi;
+    const py   = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
+    const winEnd   = Math.min(visibleCandles, TOTAL);
+    const winStart = Math.max(0, winEnd - WINDOW);
+    const slotW    = cw / WINDOW;
+    const cx_      = i => PAD.left + (i - winStart + 0.5) * slotW;
+    const cw_      = Math.max(1, slotW * 0.35);
+
+    /* Y-AXIS */
+    cx.save();
+    cx.strokeStyle = GRID; cx.lineWidth = 1;
+    cx.fillStyle = LABEL_C;
+    cx.font = '10px Roboto,sans-serif';
+    cx.textAlign = 'right'; cx.textBaseline = 'middle';
+    yTicks.forEach(p => {
+      if (p < lo || p > hi) return;
+      const y = py(p);
+      cx.beginPath(); cx.moveTo(PAD.left, y); cx.lineTo(W - PAD.right, y); cx.stroke();
+      cx.fillText('$' + (p / 1000).toFixed(0) + 'k', PAD.left - 4, y);
+    });
+    cx.restore();
+
+    /* X-AXIS */
+    cx.save();
+    cx.fillStyle = LABEL_C;
+    cx.font = '10px Roboto,sans-serif';
+    cx.textAlign = 'center'; cx.textBaseline = 'top';
+    xLabels.forEach(({ idx, label }) => {
+      if (idx < winStart || idx >= winEnd) return;
+      cx.fillText(label, cx_(idx), H - PAD.bottom + 4);
+    });
+    cx.restore();
+
+    /* CANDLES */
+    for (let i = winStart; i < winEnd; i++) {
+      const c = candles[i];
+      const bull = c.close >= c.open;
+      const col  = bull ? BULL : BEAR;
+      const x    = cx_(i);
+      const prog = i === winEnd - 1 ? candleProg : 1;
+
+      const wickProg   = Math.min(1, prog / 0.4);
+      const wickBottom = py(c.high) + (py(c.low) - py(c.high)) * wickProg;
+      cx.save();
+      cx.strokeStyle = col; cx.lineWidth = 1;
+      cx.beginPath(); cx.moveTo(x, py(c.high)); cx.lineTo(x, wickBottom); cx.stroke();
+
+      const bodyProg = Math.max(0, (prog - 0.4) / 0.6);
+      const pyO = py(c.open), pyC = py(c.close);
+      if (bull) {
+        const h = Math.max(1, (pyO - pyC) * bodyProg);
+        cx.fillStyle = col; cx.fillRect(x - cw_ / 2, pyO - h, cw_, h);
+      } else {
+        const h = Math.max(1, (pyC - pyO) * bodyProg);
+        cx.fillStyle = col; cx.fillRect(x - cw_ / 2, pyO, cw_, h);
+      }
+      cx.restore();
+    }
+
+    /* SIGNALS */
+    signals.forEach(sig => {
+      if (sig.index < winStart || sig.index >= winEnd) return;
+      const prog = animFrames[sig.index] !== undefined ? animFrames[sig.index] : 1;
+      if (prog <= 0) return;
+      const isBuy = sig.type.includes('BUY');
+      const c   = candles[sig.index];
+      const x   = cx_(sig.index);
+      const col = isBuy ? BULL : BEAR;
+      const tri = 7;
+
+      cx.save();
+      cx.globalAlpha = prog;
+      cx.translate(x, isBuy ? py(c.low) - 14 : py(c.high) + 14);
+      cx.scale(0.55 + prog * 0.45, 0.55 + prog * 0.45);
+      cx.beginPath();
+      if (isBuy) { cx.moveTo(0, -tri); cx.lineTo(tri, tri); cx.lineTo(-tri, tri); }
+      else        { cx.moveTo(0,  tri); cx.lineTo(tri,-tri); cx.lineTo(-tri,-tri); }
+      cx.closePath();
+      cx.fillStyle = col; cx.fill();
+
+      cx.font = 'bold 9px Roboto,sans-serif';
+      const tw = cx.measureText(sig.label).width;
+      const bw = tw + 8, bh = 15;
+      const by = isBuy ? tri + 2 : -(tri + 2 + bh);
+      cx.fillStyle = col;
+      cx.beginPath();
+      if (cx.roundRect) { cx.roundRect(-bw / 2, by, bw, bh, 3); } else { cx.rect(-bw / 2, by, bw, bh); }
+      cx.fill();
+      cx.fillStyle = '#fff';
+      cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      cx.fillText(sig.label, 0, by + bh / 2);
+      cx.restore();
+    });
+
+    /* PAUSE ICON */
+    if (pauseIconAlpha > 0) {
+      cx.save();
+      cx.globalAlpha = pauseIconAlpha;
+      cx.fillStyle = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.45)';
+      cx.font = 'bold 28px sans-serif';
+      cx.textAlign = 'center'; cx.textBaseline = 'middle';
+      cx.fillText('▐▐', W / 2, H / 2);
+      cx.restore();
+    }
+  }
+
+  function loop(ts) {
+    if (!isPaused) {
+      const elapsed = ts - lastStepTime;
+      candleProg = Math.min(1, elapsed / 100);
+      if (elapsed >= 150) {
+        if (visibleCandles < TOTAL) {
+          visibleCandles++;
+          lastStepTime = ts;
+          slider.value = Math.round(visibleCandles / TOTAL * 100);
+          signals.forEach(s => { if (s.index === visibleCandles - 1) animFrames[s.index] = 0; });
+        } else {
+          isPaused = true;
+          clearTimeout(pauseTimer);
+          pauseTimer = setTimeout(() => {
+            visibleCandles = 1; candleProg = 1; animFrames = {};
+            slider.value = 0; isPaused = false;
+            lastStepTime = performance.now();
+          }, 3000);
+        }
+      }
+    }
+
+    let needDraw = !isPaused;
+    Object.keys(animFrames).forEach(k => {
+      if (animFrames[k] < 1) { animFrames[k] = Math.min(1, animFrames[k] + 0.07); needDraw = true; }
+    });
+    if (pauseIconAlpha > 0) { pauseIconAlpha = Math.max(0, pauseIconAlpha - 0.025); needDraw = true; }
+    if (needDraw) draw();
+    requestAnimationFrame(loop);
+  }
+
+  slider.addEventListener('input', () => {
+    isPaused = true; clearTimeout(pauseTimer);
+    visibleCandles = Math.max(1, Math.floor(+slider.value / 100 * TOTAL));
+    candleProg = 1;
+    signals.forEach(s => { if (s.index < visibleCandles) animFrames[s.index] = 1; });
+    draw();
+  });
+  slider.addEventListener('change', () => {
+    clearTimeout(pauseTimer);
+    pauseTimer = setTimeout(() => { isPaused = false; }, 2000);
+  });
+
+  canvas.addEventListener('click', () => {
+    clearTimeout(pauseTimer);
+    isPaused = !isPaused;
+    pauseIconAlpha = 1;
+    if (!isPaused) lastStepTime = performance.now();
+  });
+
+  new ResizeObserver(resize).observe(wrap);
+  resize();
+  requestAnimationFrame(loop);
 })();
 
 /* ────────────────────────────────────────────────────────
