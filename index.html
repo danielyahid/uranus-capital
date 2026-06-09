@@ -1297,11 +1297,6 @@ slides.forEach(s => slideObserver.observe(s));
     }
   });
 
-  /* Y-ticks at $20k intervals */
-  const yTicks = [];
-  const TICK_STEP = 20000;
-  for (let t = Math.ceil(globalLo / TICK_STEP) * TICK_STEP; t <= globalHi; t += TICK_STEP) yTicks.push(t);
-
   /* Signals at same relative fractions as Slide 2 */
   const signals = [
     { frac: 6/150,   type: 'STRONG_BUY',  label: 'BUY'  },
@@ -1356,6 +1351,9 @@ slides.forEach(s => slideObserver.observe(s));
     lo -= pad; hi += pad;
     if (hi - lo < 500) { lo -= 250; hi += 250; }
     const py   = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
+    const TICK_STEP = 20000;
+    const yTicks = [];
+    for (let t = Math.ceil(lo / TICK_STEP) * TICK_STEP; t <= hi; t += TICK_STEP) yTicks.push(t);
     const slotW    = cw / WINDOW;
     const cx_      = i => PAD.left + (i - winStart + 0.5) * slotW;
     const cw_      = Math.max(1, slotW * 0.35);
