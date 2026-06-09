@@ -1271,7 +1271,7 @@ slides.forEach(s => slideObserver.observe(s));
 /* ────────────────────────────────────────────────────────
    SLIDE 6 — REAL BTC CANDLESTICK CHART (CoinGecko API)
 ──────────────────────────────────────────────────────── */
-(async function initBtcChartReal() {
+(function initBtcChartReal() {
   const canvas = document.getElementById('btc-canvas-real');
   const cx     = canvas.getContext('2d');
   const slider = document.getElementById('btc-slider-real');
@@ -1279,44 +1279,7 @@ slides.forEach(s => slideObserver.observe(s));
 
   const PAD = { top: 24, right: 12, bottom: 32, left: 52 };
 
-  function drawMessage(msg) {
-    const W = wrap.clientWidth || 600;
-    const H = wrap.clientHeight || 240;
-    canvas.width = W; canvas.height = H;
-    const isDark = document.body.classList.contains('dark');
-    cx.fillStyle = isDark ? '#1A1A1A' : '#FFFFFF';
-    cx.fillRect(0, 0, W, H);
-    cx.fillStyle = isDark ? '#8A8680' : '#5A5A5A';
-    cx.font = '14px Roboto,sans-serif';
-    cx.textAlign = 'center'; cx.textBaseline = 'middle';
-    cx.fillText(msg, W / 2, H / 2);
-  }
-
-  drawMessage('Loading…');
-
-  let raw;
-  try {
-    const url = 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=' +
-      new Date('2024-01-01').getTime() + '&limit=1000';
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    raw = await res.json();
-  } catch (_) {
-    drawMessage('Data unavailable');
-    return;
-  }
-  if (!Array.isArray(raw) || raw.length === 0) {
-    drawMessage('Data unavailable');
-    return;
-  }
-
-  const candles = raw.map(k => ({
-    ts:    k[0],
-    open:  parseFloat(k[1]),
-    high:  parseFloat(k[2]),
-    low:   parseFloat(k[3]),
-    close: parseFloat(k[4]),
-  }));
+  const candles = BTC_DATA.map(([ts, open, high, low, close]) => ({ ts, open, high, low, close }));
   const TOTAL   = candles.length;
 
   /* X-axis labels — first candle of each month */
@@ -1652,5 +1615,6 @@ function handleSubmit(e) {
   }, 3000);
 }
 </script>
+<script src="btc_data.js"></script>
 </body>
 </html>
