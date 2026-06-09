@@ -1319,15 +1319,6 @@ slides.forEach(s => slideObserver.observe(s));
   }));
   const TOTAL   = candles.length;
 
-  let globalLo = Infinity, globalHi = -Infinity;
-  candles.forEach(c => {
-    globalLo = Math.min(globalLo, c.low);
-    globalHi = Math.max(globalHi, c.high);
-  });
-  const rangePad = (globalHi - globalLo) * 0.08;
-  globalLo -= rangePad;
-  globalHi += rangePad;
-
   /* X-axis labels — first candle of each month */
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const xLabels = [];
@@ -1392,10 +1383,15 @@ slides.forEach(s => slideObserver.observe(s));
     cx.clearRect(0, 0, W, H);
     cx.fillStyle = BG; cx.fillRect(0, 0, W, H);
 
-    const lo = globalLo, hi = globalHi;
-    const py   = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
     const winEnd   = Math.min(visibleCandles, TOTAL);
     const winStart = Math.max(0, winEnd - WINDOW);
+    const windowCandles = candles.slice(winStart, winEnd);
+    let lo = Math.min(...windowCandles.map(c => c.low));
+    let hi = Math.max(...windowCandles.map(c => c.high));
+    const pad = (hi - lo) * 0.12;
+    lo -= pad; hi += pad;
+    if (hi - lo < 500) { lo -= 250; hi += 250; }
+    const py   = p => PAD.top + ch * (1 - (p - lo) / (hi - lo));
     const slotW    = cw / WINDOW;
     const cx_      = i => PAD.left + (i - winStart + 0.5) * slotW;
     const cw_      = Math.max(1, slotW * 0.35);
