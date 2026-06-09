@@ -575,9 +575,7 @@ body.lang-en #dot-nav {
         <canvas id="btc-canvas"></canvas>
       </div>
       <div class="s2-slider-wrap">
-        <span class="s2-label">Jan 2024</span>
-        <input type="range" id="btc-slider" min="0" max="100" value="0">
-        <span class="s2-label">Apr 2026</span>
+        <input type="range" id="btc-slider" min="0" max="100" value="0" dir="ltr">
       </div>
       <div class="s2-stats">
         <div class="stat-pill" data-he="אחוז דיוק 78%" data-en="Win Rate 78%"></div>
@@ -962,15 +960,13 @@ slides.forEach(s => slideObserver.observe(s));
 
   /* ── SIGNALS (STRONG only) ───────────────────────── */
   const signals = [
-    { index: 5,   type: 'STRONG_BUY',  label: 'Strong BUY'  },
-    { index: 18,  type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 48,  type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 58,  type: 'STRONG_BUY',  label: 'Strong BUY'  },
-    { index: 72,  type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 82,  type: 'STRONG_BUY',  label: 'Strong BUY'  },
-    { index: 95,  type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 100, type: 'STRONG_SELL', label: 'Strong SELL' },
-    { index: 118, type: 'STRONG_BUY',  label: 'Forecast BUY'},
+    { index: 5,   type: 'STRONG_BUY',  label: 'BUY'  },
+    { index: 18,  type: 'STRONG_SELL', label: 'SELL' },
+    { index: 48,  type: 'STRONG_BUY',  label: 'BUY'  },
+    { index: 58,  type: 'STRONG_SELL', label: 'SELL' },
+    { index: 72,  type: 'STRONG_BUY',  label: 'BUY'  },
+    { index: 82,  type: 'STRONG_SELL', label: 'SELL' },
+    { index: 95,  type: 'STRONG_SELL', label: 'SELL' },
   ];
 
   /* ── X-AXIS LABELS ───────────────────────────────── */
