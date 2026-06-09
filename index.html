@@ -1294,21 +1294,29 @@ slides.forEach(s => slideObserver.observe(s));
 
   drawMessage('Loading…');
 
-  let ohlcRaw;
+  let raw;
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/ohlc?vs_currency=usd&days=900');
+    const url = 'https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&startTime=' +
+      new Date('2024-01-01').getTime() + '&limit=1000';
+    const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    ohlcRaw = await res.json();
+    raw = await res.json();
   } catch (_) {
     drawMessage('Data unavailable');
     return;
   }
-  if (!Array.isArray(ohlcRaw) || ohlcRaw.length === 0) {
+  if (!Array.isArray(raw) || raw.length === 0) {
     drawMessage('Data unavailable');
     return;
   }
 
-  const candles = ohlcRaw.map(([ts, open, high, low, close]) => ({ open, high, low, close, ts }));
+  const candles = raw.map(k => ({
+    ts:    k[0],
+    open:  parseFloat(k[1]),
+    high:  parseFloat(k[2]),
+    low:   parseFloat(k[3]),
+    close: parseFloat(k[4]),
+  }));
   const TOTAL   = candles.length;
 
   let globalLo = Infinity, globalHi = -Infinity;
