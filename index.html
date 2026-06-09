@@ -993,7 +993,7 @@ slides.forEach(s => slideObserver.observe(s));
   const cx = canvas.getContext('2d');
   const slider = document.getElementById('btc-slider');
 
-  const WINDOW = 55;    // candles shown at once
+  let WINDOW = 55;      // candles shown at once — updated in resize()
   let visibleCandles = 1;
   let candleProg = 1;   // build progress of the newest candle (0→1 over 100 ms)
   let animFrames = {};  // signal index → 0..1 pop progress
@@ -1009,6 +1009,7 @@ slides.forEach(s => slideObserver.observe(s));
     const wrap = canvas.parentElement;
     const w = wrap.clientWidth || 600;
     const h = wrap.clientHeight || 240;
+    WINDOW = w < 768 ? 40 : 85;
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w;
       canvas.height = h;
