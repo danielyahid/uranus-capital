@@ -898,20 +898,30 @@ slides.forEach(s => slideObserver.observe(s));
 
   /* ── PRICE PATH ─────────────────────────────────── */
   const waypoints = [
-    { p: 0,    v: 42000  },
-    { p: 0.17, v: 68000  },
-    { p: 0.25, v: 58000  },
-    { p: 0.38, v: 58000  },
-    { p: 0.50, v: 108000 },
-    { p: 0.60, v: 78000  },
-    { p: 0.68, v: 98000  },
-    { p: 0.76, v: 82000  },
-    { p: 0.83, v: 112000 },
-    { p: 0.88, v: 78000  },
-    { p: 0.92, v: 95000  },
-    { p: 0.96, v: 75000  },
-    { p: 0.98, v: 85000  },
-    { p: 1.00, v: 63000  },
+    { p: 0.00, v: 40000  },  // Jan 2024
+    { p: 0.08, v: 52000  },  // Feb 2024
+    { p: 0.14, v: 73000  },  // Mar 2024 — first peak
+    { p: 0.20, v: 60000  },  // Apr 2024
+    { p: 0.25, v: 65000  },  // May 2024
+    { p: 0.32, v: 60000  },  // Jun 2024
+    { p: 0.38, v: 55000  },  // Jul 2024
+    { p: 0.42, v: 49000  },  // Aug 2024 — local low
+    { p: 0.47, v: 63000  },  // Sep 2024
+    { p: 0.52, v: 68000  },  // Oct 2024
+    { p: 0.58, v: 98000  },  // Nov 2024 — breakout
+    { p: 0.63, v: 106000 },  // Dec 2024
+    { p: 0.67, v: 109000 },  // Jan 2025 — peak
+    { p: 0.72, v: 85000  },  // Feb 2025 — pullback
+    { p: 0.76, v: 92000  },  // Mar 2025
+    { p: 0.80, v: 75000  },  // Apr 2025 — low
+    { p: 0.84, v: 85000  },  // May 2025
+    { p: 0.88, v: 105000 },  // Jul 2025
+    { p: 0.92, v: 126000 },  // Sep 2025 — ALL TIME HIGH
+    { p: 0.95, v: 108000 },  // Oct 2025
+    { p: 0.97, v: 82000  },  // Dec 2025
+    { p: 0.98, v: 60000  },  // Feb 2026 — sharp drop
+    { p: 0.99, v: 80000  },  // Apr 2026
+    { p: 1.00, v: 63000  },  // Jun 2026 — current
   ];
 
   function interpPrice(t) {
@@ -927,7 +937,7 @@ slides.forEach(s => slideObserver.observe(s));
   }
 
   /* ── CANDLE GENERATION (seeded random for reproducibility) ── */
-  const TOTAL = 120;
+  const TOTAL = 150;
   let seed = 9876;
   function rnd() {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -935,7 +945,7 @@ slides.forEach(s => slideObserver.observe(s));
   }
 
   const candles = [];
-  let prev = 42000;
+  let prev = 40000;
   for (let i = 0; i < TOTAL; i++) {
     const t = i / (TOTAL - 1);
     const target = interpPrice(t);
@@ -948,7 +958,7 @@ slides.forEach(s => slideObserver.observe(s));
     prev = close;
   }
 
-  /* ── FIXED Y-RANGE (all 120 candles, computed once) ── */
+  /* ── FIXED Y-RANGE (all 150 candles, computed once) ── */
   let globalLo = Infinity, globalHi = -Infinity;
   candles.forEach(c => {
     globalLo = Math.min(globalLo, c.low);
@@ -960,32 +970,33 @@ slides.forEach(s => slideObserver.observe(s));
 
   /* ── SIGNALS (STRONG only) ───────────────────────── */
   const signals = [
-    { index: 5,   type: 'STRONG_BUY',  label: 'BUY'  },
-    { index: 18,  type: 'STRONG_SELL', label: 'SELL' },
-    { index: 48,  type: 'STRONG_BUY',  label: 'BUY'  },
-    { index: 58,  type: 'STRONG_SELL', label: 'SELL' },
-    { index: 72,  type: 'STRONG_BUY',  label: 'BUY'  },
-    { index: 82,  type: 'STRONG_SELL', label: 'SELL' },
-    { index: 98,  type: 'STRONG_SELL', label: 'SELL' },
+    { index: 6,   type: 'STRONG_BUY',  label: 'BUY'  },
+    { index: 23,  type: 'STRONG_SELL', label: 'SELL' },
+    { index: 60,  type: 'STRONG_BUY',  label: 'BUY'  },
+    { index: 73,  type: 'STRONG_SELL', label: 'SELL' },
+    { index: 90,  type: 'STRONG_BUY',  label: 'BUY'  },
+    { index: 103, type: 'STRONG_SELL', label: 'SELL' },
+    { index: 123, type: 'STRONG_SELL', label: 'SELL' },
   ];
 
   /* ── X-AXIS LABELS ───────────────────────────────── */
   const xLabels = [
     { idx: 0,   label: 'Jan 24' },
-    { idx: 9,   label: 'Mar'    },
-    { idx: 18,  label: 'May'    },
-    { idx: 27,  label: 'Jul'    },
-    { idx: 36,  label: 'Sep'    },
-    { idx: 44,  label: 'Nov'    },
-    { idx: 53,  label: 'Jan 25' },
-    { idx: 62,  label: 'Mar'    },
-    { idx: 71,  label: 'May'    },
-    { idx: 80,  label: 'Jul'    },
-    { idx: 89,  label: 'Sep'    },
-    { idx: 98,  label: 'Nov'    },
-    { idx: 107, label: 'Jan 26' },
-    { idx: 116, label: 'Mar'    },
-    { idx: 119, label: 'Apr'    },
+    { idx: 10,  label: 'Mar'    },
+    { idx: 20,  label: 'May'    },
+    { idx: 30,  label: 'Jul'    },
+    { idx: 40,  label: 'Sep'    },
+    { idx: 50,  label: 'Nov'    },
+    { idx: 60,  label: 'Jan 25' },
+    { idx: 70,  label: 'Mar'    },
+    { idx: 80,  label: 'May'    },
+    { idx: 90,  label: 'Jul'    },
+    { idx: 100, label: 'Sep'    },
+    { idx: 110, label: 'Nov'    },
+    { idx: 120, label: 'Jan 26' },
+    { idx: 130, label: 'Mar'    },
+    { idx: 140, label: 'May'    },
+    { idx: 149, label: 'Jun 26' },
   ];
 
   /* ── CANVAS SETUP ────────────────────────────────── */
@@ -1046,7 +1057,7 @@ slides.forEach(s => slideObserver.observe(s));
     const cw_      = Math.max(1, slotW * 0.35);
 
     /* Y-AXIS */
-    const yTicks = [40000, 60000, 80000, 100000, 120000];
+    const yTicks = [40000, 60000, 80000, 100000, 120000, 130000];
     cx.save();
     cx.strokeStyle = GRID; cx.lineWidth = 1;
     cx.fillStyle = LABEL_C;
