@@ -716,14 +716,58 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
 camera.position.z = 3.2;
 
-// sphere
+// Half-orange (Bitcoin) / half-gold sphere via onBeforeCompile injection
 const geo = new THREE.SphereGeometry(1, 64, 64);
-const mat = new THREE.MeshStandardMaterial({ color: 0xC9A84C, metalness: 0.5, roughness: 0.3 });
+const mat = new THREE.MeshStandardMaterial({ metalness: 0.6, roughness: 0.25 });
+mat.onBeforeCompile = (shader) => {
+  shader.uniforms.uColorLeft  = { value: new THREE.Color(0xF7931A) }; // Bitcoin orange
+  shader.uniforms.uColorRight = { value: new THREE.Color(0xC9A84C) }; // Gold
+
+  shader.vertexShader = shader.vertexShader.replace(
+    '#include <common>',
+    '#include <common>\nvarying vec3 vLocalPos;'
+  );
+  shader.vertexShader = shader.vertexShader.replace(
+    '#include <begin_vertex>',
+    '#include <begin_vertex>\nvLocalPos = position;'
+  );
+  shader.fragmentShader = shader.fragmentShader.replace(
+    '#include <common>',
+    '#include <common>\nvarying vec3 vLocalPos;\nuniform vec3 uColorLeft;\nuniform vec3 uColorRight;'
+  );
+  // Smooth blend over a thin band at x=0 so the seam isn't razor-sharp
+  shader.fragmentShader = shader.fragmentShader.replace(
+    'vec4 diffuseColor = vec4( diffuse, opacity );',
+    'float blend = smoothstep(-0.04, 0.04, vLocalPos.x);\nvec3 splitColor = mix(uColorLeft, uColorRight, blend);\nvec4 diffuseColor = vec4( splitColor, opacity );'
+  );
+};
 const sphere = new THREE.Mesh(geo, mat);
 scene.add(sphere);
 
-// dim ambient fill so the dark side stays visible, directional from upper-left
-// creates a clear highlight/shadow gradient that makes rotation obvious
+// ₿ symbol sprite — child of sphere so it orbits with it, always faces camera
+const btcCanvas = document.createElement('canvas');
+btcCanvas.width = 256; btcCanvas.height = 256;
+const btcCtx = btcCanvas.getContext('2d');
+btcCtx.clearRect(0, 0, 256, 256);
+btcCtx.fillStyle = 'rgba(255,255,255,0.95)';
+btcCtx.font = 'bold 175px Arial';
+btcCtx.textAlign = 'center';
+btcCtx.textBaseline = 'middle';
+btcCtx.fillText('₿', 128, 138);
+const btcTex = new THREE.CanvasTexture(btcCanvas);
+const btcSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: btcTex, transparent: true }));
+btcSprite.scale.set(0.72, 0.72, 0.72);
+btcSprite.position.set(-1.12, 0, 0);
+sphere.add(btcSprite);
+
+// Small gold bar — child of sphere, floats on gold (+X) side
+const barGeo = new THREE.BoxGeometry(0.45, 0.15, 0.075);
+const barMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.92, roughness: 0.08 });
+const goldBar = new THREE.Mesh(barGeo, barMat);
+goldBar.position.set(1.12, 0, 0);
+sphere.add(goldBar);
+
+// Base lighting (kept from original)
 const ambient = new THREE.AmbientLight(0xffffff, 0.35);
 scene.add(ambient);
 const dirLight = new THREE.DirectionalLight(0xffd580, 3.5);
@@ -732,6 +776,14 @@ scene.add(dirLight);
 const rimLight = new THREE.PointLight(0xC9A84C, 1.5, 10);
 rimLight.position.set(3, -2, -2);
 scene.add(rimLight);
+
+// Accent lights to enhance the two-tone effect
+const orangeLight = new THREE.PointLight(0xF7931A, 2.2, 7);
+orangeLight.position.set(-2.5, 0.5, 1.8);
+scene.add(orangeLight);
+const goldLight = new THREE.PointLight(0xC9A84C, 2.2, 7);
+goldLight.position.set(2.5, 0.5, 1.8);
+scene.add(goldLight);
 
 // OrbitControls handles all mouse + touch interaction
 const controls = new OrbitControls(camera, renderer.domElement);
