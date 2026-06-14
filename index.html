@@ -738,34 +738,12 @@ mat.onBeforeCompile = (shader) => {
   // Smooth blend over a thin band at x=0 so the seam isn't razor-sharp
   shader.fragmentShader = shader.fragmentShader.replace(
     'vec4 diffuseColor = vec4( diffuse, opacity );',
-    'float blend = smoothstep(-0.04, 0.04, vLocalPos.x);\nvec3 splitColor = mix(uColorLeft, uColorRight, blend);\nvec4 diffuseColor = vec4( splitColor, opacity );'
+    'float blend = smoothstep(-0.35, 0.35, vLocalPos.x);\nvec3 splitColor = mix(uColorLeft, uColorRight, blend);\nvec4 diffuseColor = vec4( splitColor, opacity );'
   );
 };
 const sphere = new THREE.Mesh(geo, mat);
 scene.add(sphere);
 
-// ₿ symbol sprite — child of sphere so it orbits with it, always faces camera
-const btcCanvas = document.createElement('canvas');
-btcCanvas.width = 256; btcCanvas.height = 256;
-const btcCtx = btcCanvas.getContext('2d');
-btcCtx.clearRect(0, 0, 256, 256);
-btcCtx.fillStyle = 'rgba(255,255,255,0.95)';
-btcCtx.font = 'bold 175px Arial';
-btcCtx.textAlign = 'center';
-btcCtx.textBaseline = 'middle';
-btcCtx.fillText('₿', 128, 138);
-const btcTex = new THREE.CanvasTexture(btcCanvas);
-const btcSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: btcTex, transparent: true }));
-btcSprite.scale.set(0.85, 0.85, 0.85);
-btcSprite.position.set(-0.7, 0, 0.75);
-sphere.add(btcSprite);
-
-// Small gold bar — child of sphere, floats on gold (+X) side
-const barGeo = new THREE.BoxGeometry(0.45, 0.15, 0.075);
-const barMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.9, roughness: 0.1, emissive: 0xAA7700, emissiveIntensity: 0.3 });
-const goldBar = new THREE.Mesh(barGeo, barMat);
-goldBar.position.set(0.7, 0, 0.75);
-sphere.add(goldBar);
 
 // Base lighting (kept from original)
 const ambient = new THREE.AmbientLight(0xffffff, 0.8);
