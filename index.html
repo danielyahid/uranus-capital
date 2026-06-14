@@ -746,11 +746,14 @@ scene.add(sphere);
 
 
 // Base lighting (kept from original)
-const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+const ambient = new THREE.AmbientLight(0xffffff, 1.4);
 scene.add(ambient);
 const dirLight = new THREE.DirectionalLight(0xffd580, 5.0);
 dirLight.position.set(-3, 4, 3);
 scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0xFFD580, 1.5);
+fillLight.position.set(3, -2, -3);
+scene.add(fillLight);
 const rimLight = new THREE.PointLight(0xC9A84C, 1.5, 10);
 rimLight.position.set(3, -2, -2);
 scene.add(rimLight);
