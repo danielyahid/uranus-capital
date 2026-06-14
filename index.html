@@ -756,21 +756,21 @@ btcCtx.textBaseline = 'middle';
 btcCtx.fillText('₿', 128, 138);
 const btcTex = new THREE.CanvasTexture(btcCanvas);
 const btcSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: btcTex, transparent: true }));
-btcSprite.scale.set(0.72, 0.72, 0.72);
-btcSprite.position.set(-1.12, 0, 0);
+btcSprite.scale.set(0.85, 0.85, 0.85);
+btcSprite.position.set(-0.7, 0, 0.75);
 sphere.add(btcSprite);
 
 // Small gold bar — child of sphere, floats on gold (+X) side
 const barGeo = new THREE.BoxGeometry(0.45, 0.15, 0.075);
-const barMat = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.92, roughness: 0.08 });
+const barMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.9, roughness: 0.1, emissive: 0xAA7700, emissiveIntensity: 0.3 });
 const goldBar = new THREE.Mesh(barGeo, barMat);
-goldBar.position.set(1.12, 0, 0);
+goldBar.position.set(0.7, 0, 0.75);
 sphere.add(goldBar);
 
 // Base lighting (kept from original)
-const ambient = new THREE.AmbientLight(0xffffff, 0.35);
+const ambient = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambient);
-const dirLight = new THREE.DirectionalLight(0xffd580, 3.5);
+const dirLight = new THREE.DirectionalLight(0xffd580, 5.0);
 dirLight.position.set(-3, 4, 3);
 scene.add(dirLight);
 const rimLight = new THREE.PointLight(0xC9A84C, 1.5, 10);
