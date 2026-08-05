@@ -66,6 +66,12 @@ body {
   flex-direction: column;
 }
 
+#app-shell {
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* ── TOP BAR ── */
 #topbar {
   display: flex;
@@ -717,7 +723,7 @@ body {
       console.error('CRM cloud load failed', e);
     }
     gate.style.display = 'none';
-    shell.style.display = '';
+    shell.style.display = 'flex';
   });
 </script>
 </head>
