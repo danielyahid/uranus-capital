@@ -764,6 +764,7 @@ body {
     <button onclick="openAddCompany()">+ קרן</button>
     <button onclick="openAddReminder()">+ תזכורת</button>
     <button class="sticky-btn" onclick="addSticky()">📌 פתק</button>
+    <button onclick="openMergeModal()" style="background:rgba(92,141,224,0.12);border:1px solid #5c8de0;color:#5c8de0;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;" title="עדכון טלפון/אימייל בלי לדרוס נתונים">⚭ מיזוג פרטים</button>
     <button onclick="exportData()" style="background:rgba(76,175,130,0.12);border:1px solid #4caf82;color:#4caf82;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;" title="ייצוא גיבוי JSON">⬇ ייצוא</button>
     <label style="background:rgba(76,175,130,0.12);border:1px solid #4caf82;color:#4caf82;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Heebo',sans-serif;" title="ייבוא גיבוי JSON">⬆ ייבוא<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label>
     <button id="theme-btn" onclick="toggleTheme()" style="background:none;border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:16px;">🌙</button>
@@ -1069,6 +1070,22 @@ body {
   </div>
 </div>
 
+<!-- MERGE CONTACT DETAILS MODAL -->
+<div class="modal-overlay" id="merge-modal">
+  <div class="modal" style="width:560px;">
+    <h3>מיזוג פרטי קשר (טלפון / אימייל)</h3>
+    <div class="form-group">
+      <label>הדבק כאן מערך JSON בפורמט [{"name":"...","phone":"...","email":"..."}]. ההתאמה נעשית לפי שם מדויק. שדות ריקים בלבד יעודכנו — נתונים קיימים לא יידרסו.</label>
+      <textarea id="merge-json" placeholder='[{"name":"עדי שהרבני","phone":"050-1234567","email":"adi@example.com"}]' style="min-height:220px;font-family:'IBM Plex Mono',monospace;font-size:12px;direction:ltr;text-align:left;"></textarea>
+    </div>
+    <div id="merge-result" style="font-size:13px;color:var(--text2);margin-bottom:8px;min-height:18px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('merge-modal')">ביטול</button>
+      <button class="btn btn-primary" onclick="runMergeContactDetails()">מזג</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── STATE ───
 let contacts = JSON.parse(localStorage.getItem('crm_contacts') || '[]');
@@ -1121,6 +1138,43 @@ function applyRemoteState(data) {
   if (code) code.style.display = '';
 }
 window.applyRemoteState = applyRemoteState;
+
+// ─── MERGE CONTACT DETAILS (non-destructive phone/email import) ───
+function openMergeModal() {
+  document.getElementById('merge-json').value = '';
+  document.getElementById('merge-result').textContent = '';
+  document.getElementById('merge-modal').classList.add('open');
+}
+function runMergeContactDetails() {
+  const raw = document.getElementById('merge-json').value.trim();
+  const resultEl = document.getElementById('merge-result');
+  if (!raw) { resultEl.textContent = 'הדבק קודם JSON.'; resultEl.style.color = 'var(--red)'; return; }
+  let items;
+  try {
+    items = JSON.parse(raw);
+    if (!Array.isArray(items)) throw new Error('not array');
+  } catch (e) {
+    resultEl.textContent = 'JSON לא תקין.';
+    resultEl.style.color = 'var(--red)';
+    return;
+  }
+  let updated = 0, matched = 0, notFound = [];
+  items.forEach(item => {
+    if (!item || !item.name) return;
+    const c = contacts.find(x => x.name.trim() === item.name.trim());
+    if (!c) { notFound.push(item.name); return; }
+    matched++;
+    let changed = false;
+    if (item.phone && !c.phone) { c.phone = item.phone; changed = true; }
+    if (item.email && !c.email) { c.email = item.email; changed = true; }
+    if (changed) updated++;
+  });
+  save();
+  if (activeContactId) selectContact(activeContactId);
+  renderContactList();
+  resultEl.style.color = 'var(--green)';
+  resultEl.textContent = `הותאמו ${matched} אנשי קשר, עודכנו ${updated}.` + (notFound.length ? ` לא נמצאו: ${notFound.join(', ')}` : '');
+}
 
 // ─── CATEGORY CONFIG ───
 const CATEGORY_CLASS = {
