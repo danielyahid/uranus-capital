@@ -817,6 +817,7 @@ body {
           <button class="filter-chip" onclick="setCompanyFilter('פרייבט/סינגל פמילי אופיס', this)">פרייבט פמילי</button>
           <button class="filter-chip" onclick="setCompanyFilter('בית השקעות מוסדי', this)">בית השקעות</button>
           <button class="filter-chip" onclick="setCompanyFilter('קרן גידור', this)">קרן גידור</button>
+          <button class="filter-chip" onclick="setCompanyFilter('₿btc', this)" style="border-color:var(--gold);color:var(--gold);">₿ זיקה לביטקוין</button>
         </div>
         <div id="company-list"></div>
       </div>
@@ -1632,7 +1633,8 @@ function setCompanyFilter(f, el) {
 function renderCompanyList() {
   const q = document.getElementById('company-search-input').value.toLowerCase();
   let list = companies.filter(co => {
-    if (activeCompanyFilter !== 'all' && co.category !== activeCompanyFilter) return false;
+    if (activeCompanyFilter === '₿btc' && !co.btc) return false;
+    else if (activeCompanyFilter !== 'all' && activeCompanyFilter !== '₿btc' && co.category !== activeCompanyFilter) return false;
     if (q && !co.name.toLowerCase().includes(q) && !(co.city||'').toLowerCase().includes(q) && !(co.notes||'').toLowerCase().includes(q)) return false;
     return true;
   }).sort((a,b) => a.name.localeCompare(b.name, 'he'));
@@ -1646,7 +1648,7 @@ function renderCompanyList() {
     <div class="company-item${co.id === activeCompanyId ? ' active' : ''}" onclick="selectCompany('${co.id}')">
       <div class="cat-dot cat-${catClass(co.category)}"></div>
       <div class="contact-info">
-        <div class="contact-name">${co.name}</div>
+        <div class="contact-name">${co.btc ? '<span style="color:var(--gold);" title="' + co.btc.replace(/"/g,'&quot;') + '">₿</span> ' : ''}${co.name}</div>
         <div class="contact-meta">${co.category} · ${n} אנשי קשר</div>
       </div>
       <span class="tag stage-tag" style="font-size:10px;">${stage ? stage.label : ''}</span>
@@ -2205,4 +2207,3 @@ updateReminderBadge();
 
 </body>
 </html>
-
