@@ -1096,6 +1096,26 @@ body {
   </div>
 </div>
 
+<!-- BULK ADD CONTACTS MODAL -->
+<div class="modal-overlay" id="bulk-add-contacts-modal">
+  <div class="modal" style="width:560px;">
+    <h3>הוספת אנשי קשר לקרן (ייבוא)</h3>
+    <div class="form-group">
+      <label>קרן יעד</label>
+      <select id="bulk-add-company-id"></select>
+    </div>
+    <div class="form-group">
+      <label>הדבק JSON: [{"name":"...","title":"...","linkedin":"...","phone":"...","email":"...","confidence":"..."}]. אנשי קשר עם שם שכבר קיים תחת הקרן הזו ידולגו.</label>
+      <textarea id="bulk-add-json" placeholder='[{"name":"ישראל ישראלי","title":"מנכ\"ל","linkedin":"https://www.linkedin.com/in/..."}]' style="min-height:220px;font-family:'IBM Plex Mono',monospace;font-size:12px;direction:ltr;text-align:left;"></textarea>
+    </div>
+    <div id="bulk-add-result" style="font-size:13px;color:var(--text2);margin-bottom:8px;min-height:18px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('bulk-add-contacts-modal')">ביטול</button>
+      <button class="btn btn-primary" onclick="runBulkAddContacts()">הוסף אנשי קשר</button>
+    </div>
+  </div>
+</div>
+
 <!-- MERGE CONTACT DETAILS MODAL -->
 <div class="modal-overlay" id="merge-modal">
   <div class="modal" style="width:560px;">
@@ -1207,6 +1227,54 @@ function runMergeCompany() {
   activeCompanyId = target.id;
   selectCompany(target.id);
   resultEl.textContent = '';
+}
+
+// ─── BULK ADD CONTACTS (research enrichment import) ───
+function openBulkAddContactsModal(companyId) {
+  const sel = document.getElementById('bulk-add-company-id');
+  sel.innerHTML = companies.slice().sort((a,b) => a.name.localeCompare(b.name, 'he'))
+    .map(c => `<option value="${c.id}" ${c.id === companyId ? 'selected' : ''}>${c.name}</option>`).join('');
+  document.getElementById('bulk-add-json').value = '';
+  document.getElementById('bulk-add-result').textContent = '';
+  document.getElementById('bulk-add-contacts-modal').classList.add('open');
+}
+function runBulkAddContacts() {
+  const companyId = document.getElementById('bulk-add-company-id').value;
+  const raw = document.getElementById('bulk-add-json').value.trim();
+  const resultEl = document.getElementById('bulk-add-result');
+  if (!companyId) { resultEl.style.color = 'var(--red)'; resultEl.textContent = 'בחר קרן.'; return; }
+  if (!raw) { resultEl.style.color = 'var(--red)'; resultEl.textContent = 'הדבק קודם JSON.'; return; }
+  let items;
+  try {
+    items = JSON.parse(raw);
+    if (!Array.isArray(items)) throw new Error('not array');
+  } catch (e) {
+    resultEl.style.color = 'var(--red)';
+    resultEl.textContent = 'JSON לא תקין.';
+    return;
+  }
+  const existingNames = new Set(contacts.filter(c => c.companyId === companyId).map(c => c.name.trim()));
+  let added = 0, skipped = [];
+  items.forEach((item, idx) => {
+    if (!item || !item.name) return;
+    const name = item.name.trim();
+    if (existingNames.has(name)) { skipped.push(name); return; }
+    const id = (Date.now() + idx).toString();
+    contacts.push({
+      id, name, company: item.title || '', companyId,
+      phone: item.phone || '', email: item.email || '', linkedin: item.linkedin || '',
+      notes: item.confidence ? ('מקור מחקר: ' + item.confidence) : '',
+      proximity: 'cold', investorType: 'fund', amount: '', connectorId: null,
+      interactions: [], createdAt: Date.now(), stage: 'lead'
+    });
+    existingNames.add(name);
+    added++;
+  });
+  save();
+  renderContactList();
+  if (activeCompanyId === companyId) selectCompany(companyId);
+  resultEl.style.color = 'var(--green)';
+  resultEl.textContent = `נוספו ${added} אנשי קשר.` + (skipped.length ? ` דולגו (שם כבר קיים): ${skipped.join(', ')}` : '');
 }
 
 // ─── MERGE CONTACT DETAILS (non-destructive phone/email import) ───
@@ -1757,6 +1825,7 @@ function selectCompany(id) {
         <button class="btn btn-ghost" onclick="openAddContactForCompany('${co.id}')">+ איש קשר</button>
         <button class="btn btn-ghost" onclick="openEditCompany('${co.id}')">עריכה</button>
         <button class="btn btn-ghost" onclick="openMergeCompanyModal('${co.id}')">מזג עם קרן אחרת</button>
+        <button class="btn btn-ghost" onclick="openBulkAddContactsModal('${co.id}')">ייבוא אנשי קשר (JSON)</button>
         <button class="btn btn-danger" onclick="deleteCompany('${co.id}')">מחיקה</button>
       </div>
     </div>
