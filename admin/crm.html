@@ -449,6 +449,13 @@ body {
   color: var(--text3);
   font-family: 'IBM Plex Mono', monospace;
 }
+.pipeline-col-search { padding: 0 10px 10px; }
+.pipeline-col-search input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 6px 10px; color: var(--text);
+  font-family: 'Heebo', sans-serif; font-size: 12px; outline: none;
+}
+.pipeline-col-search input:focus { border-color: var(--gold); }
 .pipeline-col-body { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .pipeline-card {
   background: var(--surface2);
@@ -1071,6 +1078,24 @@ body {
   </div>
 </div>
 
+<!-- MERGE COMPANIES MODAL -->
+<div class="modal-overlay" id="merge-company-modal">
+  <div class="modal" style="width:460px;">
+    <h3>מיזוג קרנות</h3>
+    <div class="form-group">
+      <label>קרן המקור: <span id="merge-company-source-name" style="color:var(--gold);"></span></label>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">כל אנשי הקשר יועברו לקרן היעד, ההערות/אתר יתמזגו, וקרן המקור תימחק. הפעולה אינה הפיכה.</div>
+      <label>מזג לתוך קרן:</label>
+      <select id="merge-company-target"></select>
+    </div>
+    <div id="merge-company-result" style="font-size:13px;color:var(--text2);margin-bottom:8px;min-height:18px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('merge-company-modal')">ביטול</button>
+      <button class="btn btn-danger" onclick="runMergeCompany()">מזג ומחק את קרן המקור</button>
+    </div>
+  </div>
+</div>
+
 <!-- MERGE CONTACT DETAILS MODAL -->
 <div class="modal-overlay" id="merge-modal">
   <div class="modal" style="width:560px;">
@@ -1139,6 +1164,50 @@ function applyRemoteState(data) {
   if (code) code.style.display = '';
 }
 window.applyRemoteState = applyRemoteState;
+
+// ─── MERGE COMPANIES ───
+let mergeSourceCompanyId = null;
+function openMergeCompanyModal(companyId) {
+  mergeSourceCompanyId = companyId;
+  const source = companies.find(c => c.id === companyId);
+  if (!source) return;
+  document.getElementById('merge-company-source-name').textContent = source.name;
+  const sel = document.getElementById('merge-company-target');
+  sel.innerHTML = companies.filter(c => c.id !== companyId)
+    .sort((a,b) => a.name.localeCompare(b.name, 'he'))
+    .map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('merge-company-result').textContent = '';
+  document.getElementById('merge-company-modal').classList.add('open');
+}
+function runMergeCompany() {
+  const targetId = document.getElementById('merge-company-target').value;
+  const resultEl = document.getElementById('merge-company-result');
+  if (!targetId) { resultEl.style.color = 'var(--red)'; resultEl.textContent = 'בחר קרן יעד.'; return; }
+  const source = companies.find(c => c.id === mergeSourceCompanyId);
+  const target = companies.find(c => c.id === targetId);
+  if (!source || !target) return;
+  if (!confirm(`למזג את "${source.name}" לתוך "${target.name}" ולמחוק את "${source.name}"? הפעולה אינה הפיכה.`)) return;
+
+  const movedContacts = contacts.filter(c => c.companyId === source.id);
+  movedContacts.forEach(c => { c.companyId = target.id; });
+
+  const mergeNote = `[מוזג מ-"${source.name}"]` +
+    (source.site ? ` אתר קודם: ${source.site}.` : '') +
+    (source.notes ? ` הערות קודמות: ${source.notes}` : '');
+  target.notes = target.notes ? (target.notes + '\n\n' + mergeNote) : mergeNote;
+  if (!target.site && source.site) target.site = source.site;
+  if (!target.btc && source.btc) target.btc = source.btc;
+  if (!target.city && source.city) target.city = source.city;
+
+  companies = companies.filter(c => c.id !== source.id);
+  save();
+
+  closeModal('merge-company-modal');
+  renderCompanyList();
+  activeCompanyId = target.id;
+  selectCompany(target.id);
+  resultEl.textContent = '';
+}
 
 // ─── MERGE CONTACT DETAILS (non-destructive phone/email import) ───
 function openMergeModal() {
@@ -1687,6 +1756,7 @@ function selectCompany(id) {
         <button class="btn btn-ghost" onclick="openAddInteraction('company','${co.id}')">+ אינטראקציה</button>
         <button class="btn btn-ghost" onclick="openAddContactForCompany('${co.id}')">+ איש קשר</button>
         <button class="btn btn-ghost" onclick="openEditCompany('${co.id}')">עריכה</button>
+        <button class="btn btn-ghost" onclick="openMergeCompanyModal('${co.id}')">מזג עם קרן אחרת</button>
         <button class="btn btn-danger" onclick="deleteCompany('${co.id}')">מחיקה</button>
       </div>
     </div>
@@ -1919,7 +1989,7 @@ let dragSourceStage = null;
 
 function getPipelineItems() {
   const standaloneContacts = contacts.filter(c => !c.companyId).map(c => ({ id: c.id, type: 'contact', name: c.name, stage: c.stage, meta: `${INVESTOR_TYPE[c.investorType] || ''}${c.amount ? ' · ' + AMOUNT_LABEL[c.amount] : ''}` }));
-  const companyItems = companies.map(co => ({ id: co.id, type: 'company', name: co.name, stage: co.stage, meta: `${co.category}${companyContacts(co.id).length ? ' · ' + companyContacts(co.id).length + ' אנשי קשר' : ''}` }));
+  const companyItems = companies.map(co => ({ id: co.id, type: 'company', name: co.name, stage: co.stage, btc: co.btc, meta: `${co.category}${companyContacts(co.id).length ? ' · ' + companyContacts(co.id).length + ' אנשי קשר' : ''}` }));
   return [...companyItems, ...standaloneContacts];
 }
 
@@ -1934,6 +2004,9 @@ function renderPipeline() {
         <div class="pipeline-col-title" style="color:${stage.color}">${stage.label}</div>
         <div class="pipeline-count" id="count-${stage.key}">${stageItems.length}</div>
       </div>
+      <div class="pipeline-col-search">
+        <input type="text" placeholder="חיפוש בעמודה..." oninput="filterPipelineColumn('${stage.key}', this.value)">
+      </div>
       <div class="pipeline-col-body"
            data-stage="${stage.key}"
            ondragover="onDragOver(event)"
@@ -1947,7 +2020,7 @@ function renderPipeline() {
              ondragstart="onDragStart(event,'${it.id}','${it.type}','${stage.key}')"
              ondragend="onDragEnd(event)"
              onclick="handleCardClick(event,'${it.id}','${it.type}')">
-          <div class="name">${it.type === 'company' ? '🏛️ ' : ''}${it.name}</div>
+          <div class="name">${it.type === 'company' ? '🏛️ ' : ''}${it.btc ? `<span style="color:var(--gold)" title="${it.btc.replace(/"/g,'&quot;')}">₿</span> ` : ''}${it.name}</div>
           <div class="meta">${it.meta}</div>
         </div>`).join('')}
         <button onclick="openAddCompanyToStage('${stage.key}')"
@@ -1957,6 +2030,16 @@ function renderPipeline() {
       </div>
     </div>`;
   }).join('');
+}
+
+function filterPipelineColumn(stageKey, query) {
+  const col = document.querySelector('.pipeline-col-body[data-stage="' + stageKey + '"]');
+  if (!col) return;
+  const q = query.trim().toLowerCase();
+  col.querySelectorAll('.pipeline-card').forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
 }
 
 function handleCardClick(e, id, type) {
